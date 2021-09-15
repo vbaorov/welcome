@@ -569,33 +569,26 @@ productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악�
 
 # 운영
 --
-# Deploy/Pipeline 
+# Deploy/Pipeline (작성완료)
 
 - (CI/CD 설정) BuildSpec.yml 사용 각 MSA 구현물은 git의 source repository 에 구성되었고, AWS의 CodeBuild를 활용하여 무정지 CI/CD를 설정하였다.
 
+- Repository 화면 캡쳐 
+
 ![CICD](https://user-images.githubusercontent.com/88864433/133468925-a9ba1fec-8331-4a68-a0b7-2b570e4182de.PNG)
+
+- CodeBuild 설정
 
 ![CODEBUILD1](https://user-images.githubusercontent.com/88864433/133469657-2b250c1e-777d-4d18-8ae9-c631ba9fa9f6.PNG)
 
+
 ![codebuild2](https://user-images.githubusercontent.com/88864433/133469760-d091efc6-5d09-4c25-a324-337f0b5e0d87.PNG)
-
-CodeBuild 설정
-
-빌드 프로젝드 생성(각 MSA별 별도 설정)
-```
-AWS 화면 내 캡처
-```
-
-- 기본 repository 
-``` 
-repository 화면 캡쳐 
-```
 
 - 빌드 환경 설정 
 환경변수(KUBE_URL, KUBE_TOKEN, repository 등 설정) 
-```
-환경변수 화면 캡처 
-```
+
+![codebuild_환경변수](https://user-images.githubusercontent.com/88864433/133470474-c69371cd-2ed6-49f1-adb5-8d1f7ac4d056.PNG)
+
 
 - 빌드 스펙
 ```
