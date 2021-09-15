@@ -207,11 +207,14 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 헥사고날 아키텍처 다이어그램 도출 
 
-- 캡쳐화면 필요
-- 다이어그램 수정 필요함 
+![분산스트림](https://user-images.githubusercontent.com/88864433/133370652-72702eb0-1928-4484-b21d-dc96dd6b64a8.PNG)
+
+#### 다이어그램 수정 필요함 
 
 ```
-텍스트
+- Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
+- 호출관계에서 PubSub 과 Req/Resp 를 구분함
+- 서브 도메인과 바운디드 컨텍스트의 분리:  각 팀의 KPI 별로 아래와 같이 관심 구현 스토리를 나눠가짐
 ```
 
 # 구현
