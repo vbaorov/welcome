@@ -518,7 +518,7 @@ public class OrderStatusViewHandler {
 #### 답변 
 ordermanagement 서비스만 구동되고 delivery 서비스는 멈춰있는 상태이다. 주문관리에 이벤트가 발생하면 카프카 큐에 정상적으로 들어감을 확인할 수 있다.
 
-# 폴리글랏 퍼시스턴스
+# 폴리글랏 퍼시스턴스 (작성완료. 검토필요) 
 - pom.xml
 ```
 		<dependency>
@@ -555,6 +555,7 @@ spring:
 ```
 
 - 각 마이크로 서비스들이 각자의 저장소 구조를 자율적으로 채택하고 각자의 저장소 유형 (RDB, NoSQL, File System 등)을 선택하여 구현하였는가?
+
 #### 답변 
 H2 DB의 경우 휘발성 데이터의 단점이 있는데, productdelivery 서비스의 경우 타 서비스들의 비해 중요하다고 생각하였다.
 productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악하여 처리해야 되기 때문에 백업,복원기능과 안정성이 장점이 있는 mysql을 선택하여 구현하였다.
@@ -571,6 +572,8 @@ productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악�
 # Deploy/Pipeline 
 
 - (CI/CD 설정) BuildSpec.yml 사용 각 MSA 구현물은 git의 source repository 에 구성되었고, AWS의 CodeBuild를 활용하여 무정지 CI/CD를 설정하였다.
+
+![CICD](https://user-images.githubusercontent.com/88864433/133468925-a9ba1fec-8331-4a68-a0b7-2b570e4182de.PNG)
 
 CodeBuild 설정
 
