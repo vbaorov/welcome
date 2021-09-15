@@ -834,4 +834,32 @@ spec:
 - kubectl get pvc
 ![pvc_1](https://user-images.githubusercontent.com/88864433/133474884-3f4b8c61-953d-4631-908f-783523d8846c.PNG)
 
+- deployment.yml
+```
+    spec:
+      containers:
+        - name: order
+          image: 879772956301.dkr.ecr.ap-southeast-1.amazonaws.com/order:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+.... 중략
+          volumeMounts:
+          - name: volume
+            mountPath: /logs
+        volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: aws-efs
+```
 
+- 최종 테스트 화면
+
+![pvc_최종](https://user-images.githubusercontent.com/88864433/133479414-111980fb-598b-4e5a-8f13-24255d11f53a.PNG)
