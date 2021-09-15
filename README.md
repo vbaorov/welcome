@@ -430,6 +430,7 @@ Hystrix 를 설정: 요청처리 쓰레드에서 처리시간이 610 ms가 넘�
 
 # ConfigMap
 -- 
+
 운영환경에서 컨피그맵을 통해 pod 생성 시 정해진 kafka url 과 log 파일 설정(운영과 개발 분리)
 
 # Self-healing (Liveness Probe) 
