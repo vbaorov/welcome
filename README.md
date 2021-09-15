@@ -1,4 +1,6 @@
 # 조별과제 - 12번가
+
+![12번가](https://user-images.githubusercontent.com/88864433/133467597-709524b1-4613-4dab-bc57-948f433ad565.png)
 ---------------------------------
 
 # Table of contents
@@ -217,12 +219,10 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 5. [설계/구현/운영]circuit breaker : 주문결재건수가 많으면(3건) 주문 및 결재를 받지 않고 잠시 후에 하도록 안내한다.
 ``` 
 
-### 헥사고날 아키텍처 다이어그램 도출 
+### 헥사고날 아키텍처 다이어그램 도출 (그림 수정필요없는지 확인 필요)
 
 ![분산이벤트스트림](https://user-images.githubusercontent.com/88864433/133448231-162975ce-3bf4-412a-8de6-e419df515834.PNG)
-
-
-#### 다이어그램 수정 필요함 
+ 
 
 ```
 - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
