@@ -386,7 +386,7 @@ Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리�
 ordermanagement 서비스만 구동되고 delivery 서비스는 멈춰있는 상태이다. 주문관리에 이벤트가 발생하면 카프카 큐에 정상적으로 들어감을 확인할 수 있다.
 
 # 폴리글랏 퍼시스턴스
---
+- pom.xml
 ```
 		<dependency>
         	<groupId>mysql</groupId>
@@ -400,6 +400,27 @@ ordermanagement 서비스만 구동되고 delivery 서비스는 멈춰있는 상
     		<version>3.25.0-GA</version>
 		</dependency>
 ```
+
+application.yml
+```
+
+spring:
+  profiles: docker
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://cloud12st.ck7n6wloicx4.ap-northeast-2.rds.amazonaws.com:3306/cloud12st
+    username: root
+    password: cloud#1234
+
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      format_sql: true
+      ddl-auto: create
+```
+
 - 각 마이크로 서비스들이 각자의 저장소 구조를 자율적으로 채택하고 각자의 저장소 유형 (RDB, NoSQL, File System 등)을 선택하여 구현하였는가?
 #### 답변 
 Payment 서비스의 경우 타 서비스들의 비해 안정성이 중요하다고 생각하였다. H2 DB의 경우 대규모 주문이 발생시 안정성과 성능이 아직은 부족하다고 생각했다. 그래서 안정성과 성능이 높은 DB와 경제성(라이센스 비용)에 강점이 있는 Maria DB를 선택하게 되었다.
