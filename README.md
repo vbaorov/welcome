@@ -434,18 +434,77 @@ Promote.java Entity Class에 @PostPersist로 주문 생성 직후 결제를 호�
 
 
 
-# CQRS 
+# CQRS (작성완료. 검토필요) 
 - CQRS: Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능한가?
 
 주문/배송상태가 바뀔 때마다 고객이 현재 상태를 확인할 수 있어야 한다는 요구사항에 따라 주문 서비스 내에 OrderStatus View를 모델링하였다
 
-![VIEW](https://user-images.githubusercontent.com/88864433/133460922-a8cee0b2-5449-4a11-b8a2-cea31e7ea4cc.PNG)
+OrderStatus.java 
+```
+@Entity
+@Table(name="OrderStatus_table")
+public class OrderStatus {
+
+        @Id
+        @GeneratedValue(strategy=GenerationType.AUTO)
+        private Long id;
+        private String username;
+        private String userId;
+        private Long orderId;
+        private String orderStatus;
+        private String productId;
+        private String productName;
+        private Long productPrice;
+        private int qty; 
+        private String couponId;
+        private String couponKind;
+        private String couponUseYn;
+.... 생략 
+```
+
+OrderStatusViewHandler 를 통해 구현
+
+Pub/Sub 기반으로 별도 ProductPage_table 테이블에 저장되도록 구현하였다.
+
+```
+@Service
+public class OrderStatusViewHandler {
+
+
+    @Autowired
+    private OrderStatusRepository orderStatusRepository;
+    
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderPlaced_then_CREATE_1 (@Payload OrderPlaced orderPlaced) {
+        try {
+
+            if (!orderPlaced.validate()) return;
+
+            // view 객체 생성
+            OrderStatus orderStatus = new OrderStatus();
+            orderStatus.setUsername(orderPlaced.getUsername());
+            orderStatus.setUserId(orderPlaced.getUserId());
+            orderStatus.setOrderId(orderPlaced.getId());
+            orderStatus.setOrderStatus("OrderPlaced");
+            orderStatus.setProductId(orderPlaced.getProductId());
+            orderStatus.setProductName(orderPlaced.getProductName());
+            orderStatus.setProductPrice(orderPlaced.getProductPrice());
+            orderStatus.setQty(orderPlaced.getQty());
+           
+            orderStatusRepository.save(orderStatus);
+            
+            System.out.println("\n\n##### OrderStatus : whenOrderPlaced_then_CREATE_1" + "\n\n");
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+```
 
 주문에 대한 결제완료(PayStatus) 시 orderId를 키값으로 OrderStatus 데이터도 생성되며 (주문과 결제를 동시에 처리했을 때 배송을 시작하므로)
 
 "결제완료(주문완료), 주문접수, 배송시작, 결제취소(주문취소)"의 이벤트에 따라 주문상태가 업데이트되도록 모델링하였다.
 
-![view 속성](https://user-images.githubusercontent.com/88864433/133461548-fb7be513-952e-4c64-bc44-f8ffc867a565.PNG)
 
 
 
