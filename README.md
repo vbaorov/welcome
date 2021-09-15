@@ -40,6 +40,7 @@
 5.[주문팀]고객이 주문을 취소한다.
 6.[상품배송팀] 주문이 취소되면 배달이 취소된다.
 
+
 나. 비기능적 요구사항
 1. [설계/구현]Req/Resp : 배송이 완료된건에 대해서만 쿠폰을 발행한다. 
 2. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
@@ -165,16 +166,16 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 폴리시의 이동과 컨텍스트 맵핑 (점선은 Pub/Sub, 실선은 Req/Resp) 
 
-![7](https://user-images.githubusercontent.com/88864433/133261525-07bc9e4e-675b-49e2-89ab-437b0fa701c3.PNG)
+![8](https://user-images.githubusercontent.com/88864433/133361234-7bde60ba-2b5e-415e-a417-924e62d712a4.PNG)
  
 
 ### 완성된 모형
 
-![모델완성](https://user-images.githubusercontent.com/88864433/133261630-786ec556-617d-4122-8a43-7da20d75b119.png)
+![모델](https://user-images.githubusercontent.com/88864433/133361343-d99b4182-22ac-4881-aeee-19ae121723b5.PNG)
  
 ### 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
 
-![9](https://user-images.githubusercontent.com/88864433/133262036-a34b7d38-47f0-4306-901e-3cee62a265fd.PNG)
+![주문완료검증](https://user-images.githubusercontent.com/88864433/133361542-bc0225f1-d540-42d8-ab1b-f9de9967e84a.PNG)
 
 ```
 - 고객이 물건을 주문하고 결제한다 (ok)
@@ -182,7 +183,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 - 마케팅팀에서 쿠폰을 발행한다 (ok) 
 - 쿠폰이 발행된 것을 확인하고 배송을 시작한다 (ok)
 ```
-![10](https://user-images.githubusercontent.com/88864433/133262248-da4cd944-55de-4bb0-bc5d-dfd8723699c6.PNG)
+![주문취소검증](https://user-images.githubusercontent.com/88864433/133361562-11bef187-a52e-4948-a429-995d76d4424d.PNG)
 
 ``` 
 - 고객이 주문을 취소할 수 있다 (ok)
