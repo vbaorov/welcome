@@ -220,6 +220,8 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 ### 헥사고날 아키텍처 다이어그램 도출 
 
 ![분산스트림](https://user-images.githubusercontent.com/88864433/133370652-72702eb0-1928-4484-b21d-dc96dd6b64a8.PNG)
+![분산이벤트스트림](https://user-images.githubusercontent.com/88864433/133448231-162975ce-3bf4-412a-8de6-e419df515834.PNG)
+
 
 #### 다이어그램 수정 필요함 
 
