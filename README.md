@@ -387,6 +387,19 @@ ordermanagement 서비스만 구동되고 delivery 서비스는 멈춰있는 상
 
 # 폴리글랏 퍼시스턴스
 --
+```
+		<dependency>
+        	<groupId>mysql</groupId>
+        	<artifactId>mysql-connector-java</artifactId>
+        	<scope>provided</scope>
+    	</dependency>
+
+		<dependency>
+		    <groupId>org.javassist</groupId>
+    		<artifactId>javassist</artifactId>
+    		<version>3.25.0-GA</version>
+		</dependency>
+```
 - 각 마이크로 서비스들이 각자의 저장소 구조를 자율적으로 채택하고 각자의 저장소 유형 (RDB, NoSQL, File System 등)을 선택하여 구현하였는가?
 #### 답변 
 Payment 서비스의 경우 타 서비스들의 비해 안정성이 중요하다고 생각하였다. H2 DB의 경우 대규모 주문이 발생시 안정성과 성능이 아직은 부족하다고 생각했다. 그래서 안정성과 성능이 높은 DB와 경제성(라이센스 비용)에 강점이 있는 Maria DB를 선택하게 되었다.
