@@ -346,13 +346,33 @@ http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
 
 #### 주문취소하기 캡쳐화면
 
-# 동기식 호출과 Fallback 처리
---
+# 동기식 호출과 Fallback 처리 (작성완료)
+
 (Request-Response 방식의 서비스 중심 아키텍처 구현)
 
-마이크로 서비스간 Request-Response 호출에 있어 대상 서비스를 어떠한 방식으로 찾아서 호출 하였는가? (Service Discovery, REST, FeignClient)
-#### 답변 
+- 마이크로 서비스간 Request-Response 호출에 있어 대상 서비스를 어떠한 방식으로 찾아서 호출 하였는가? (Service Discovery, REST, FeignClient)
+
 요구사항대로 주문이 들어와야지만 결제 서비스를 호출할 수 있도록 주문 시 결제 처리를 동기식으로 호출하도록 한다.
+
+Order.java Entity Class에 @PostPersist로 주문 생성 직후 결제를 호출하도록 처리하였다
+
+```
+    @PostPersist
+    public void onPostPersist(){
+    	
+         Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    	
+        OrderPlaced orderPlaced = new OrderPlaced();
+        BeanUtils.copyProperties(this, orderPlaced);
+        orderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
+        System.out.println("\n\n##### productid : "+this.productId + "\n\n");
+        logger.debug("OrderService");
+    }
+```
+
 
 # 비동기식 호출과 Eventual Consistency 
 --
@@ -368,7 +388,8 @@ Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리�
 # SAGA 패턴 
 --
 - 취소에 따른 보상 트랜잭션을 설계하였는가(Saga Pattern)
-#### 답변 : SAGA 패턴은 각 서비스의 트랜잭션 완료 후에 다음 서비스가 트리거 되어 트랜잭션을 실행하는 방법으로현재 BookDelivery 시스템도 SAGA 패턴으로 설계되어 있다.
+#### 답변 : 
+상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 
 
 
 # CQRS 
