@@ -394,18 +394,100 @@ http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
 
 요구사항대로 배송팀에서는 쿠폰이 발행된 것을 확인한 후에 배송을 시작한다.
 
-Promote.java Entity Class에 @PostPersist로 주문 생성 직후 결제를 호출하도록 처리하였다
+StockDelivery.java Entity Class에 @PostPersist로 쿠폰 발행 후에 배송을 시작하도록 처리하였다.
 
 ```
-   @PostPersist
-    public void onPostPersist(){
-        CouponPublished couponPublished = new CouponPublished();
-        BeanUtils.copyProperties(this, couponPublished);
-        couponPublished.publishAfterCommit();
+    @PostPersist
+    public void onPostPersist() throws Exception{
+
+    	Promote promote = new Promote();
+        promote.setPhoneNo(this.phoneNo); 
+        promote.setUserId(this.userId); 
+        promote.setUsername(this.userName); 
+        promote.setOrderId(this.orderId); 
+        promote.setOrderStatus(this.orderStatus); 
+        promote.setProductId(this.productId); 
+        System.out.println("\n\npostpersist() : "+this.deliveryStatus +"\n\n");
+        // deliveryStatus 따라 로직 분기
+        if(DELIVERY_STARTED == this.deliveryStatus){
+        	
+	        boolean result = (boolean) ProductdeliveryApplication.applicationContext.getBean(food.delivery.work.external.PromoteService.class).publishCoupon(promote);
+	
+	        if(result){
+	        	System.out.println("----------------");
+	            System.out.println("Coupon Published");
+	            System.out.println("----------------");
+		       	DeliveryStarted deliveryStarted = new DeliveryStarted();
+		        BeanUtils.copyProperties(this, deliveryStarted);
+		        deliveryStarted.publishAfterCommit();
+	        }else {
+	        	throw new RollbackException("Failed during coupon publish");
+	        }
+        
+        }
+  
     }
     
 ```
-... 이후에 작성해야 함. 
+
+##### 동기식 호출은 PromoteService 클래스를 두어 FeignClient 를 이용하여 호출하도록 하였다.
+
+- PromoteService.java
+
+```
+  
+package food.delivery.work.external;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import food.delivery.work.Promote;
+
+import org.springframework.web.bind.annotation.RequestBody;
+
+@FeignClient(name="marketing", url = "${api.promote.url}", fallback = PromoteServiceFallback.class)
+public interface PromoteService {
+  
+    @RequestMapping(method=RequestMethod.POST, path="/createPromoteInfo")
+    public boolean publishCoupon(@RequestBody Promote promote);
+    
+    @RequestMapping(method=RequestMethod.POST, path="/cancelCoupon")
+    public boolean cancelCoupon(@RequestBody Promote promote);
+}
+```
+
+- PromoteServiceFallback.java
+
+```
+  
+package food.delivery.work.external;
+
+import org.springframework.stereotype.Component;
+
+import food.delivery.work.Promote;
+
+@Component
+public class PromoteServiceFallback implements PromoteService {
+    @Override
+    public boolean publishCoupon(Promote promote) {
+        //do nothing if you want to forgive it
+
+        System.out.println("Circuit breaker has been opened. Fallback returned instead.");
+        return false;
+    }
+    
+    @Override
+    public boolean cancelCoupon(Promote promote) {
+        //do nothing if you want to forgive it
+
+        System.out.println("Circuit breaker has been opened. Fallback returned instead.");
+        return false;
+    }
+}
+```
+
 
 # 비동기식 호출과 Eventual Consistency 
 -- 주문취소 후에 배송이 취소되는 과정이 비동기식일까?? 
