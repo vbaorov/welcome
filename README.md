@@ -775,84 +775,12 @@ Hystrix 를 설정: 요청처리 쓰레드에서 처리시간이 610 ms가 넘�
 # 운영유연성
 - 데이터 저장소를 분리하기 위한 Persistence Volume과 Persistence Volume Claim을 적절히 사용하였는가?
 
-- kubectl apply -f efs-sa.yaml 
-```
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: efs-provisioner
-  namespace: default
-```
-
-- kubectl apply -f efs-rbac.yaml 
-```
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: efs-provisioner-runner
-  namespace: default
-rules:
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "create", "delete"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["storageclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["create", "update", "patch"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: run-efs-provisioner
-  namespace: default
-subjects:
-  - kind: ServiceAccount
-    name: efs-provisioner
-     # replace with namespace where provisioner is deployed
-    namespace: default
-roleRef:
-  kind: ClusterRole
-  name: efs-provisioner-runner
-  apiGroup: rbac.authorization.k8s.io
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: leader-locking-efs-provisioner
-  namespace: default
-rules:
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: leader-locking-efs-provisioner
-  namespace: default
-subjects:
-  - kind: ServiceAccount
-    name: efs-provisioner
-    # replace with namespace where provisioner is deployed
-    namespace: default
-roleRef:
-  kind: Role
-  name: leader-locking-efs-provisioner
-  apiGroup: rbac.authorization.k8s.io
-```
-
 - kubectl apply -f efs-provisioner-deploy.yml
 ```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: efs-provisioner
-#  namespace: airbnb
 spec:
   replicas: 1
   strategy:
@@ -860,10 +788,7 @@ spec:
   selector:
     matchLabels:
       app: efs-provisioner
-  template:
-    metadata:
-      labels:
-        app: efs-provisioner
+      ...
     spec:
       serviceAccount: efs-provisioner
       containers:
@@ -885,17 +810,6 @@ spec:
             server: fs-13229953.efs.ap-southeast-1.amazonaws.com
             path: /
 ```
-
-- kubectl apply -f storageclass.yml
-```
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: aws-efs
-#  namespace: airbnb
-provisioner: my-aws.com/aws-efs
-```
-
 - kubectl apply -f volume-pvc.yml
 ```
 apiVersion: v1
