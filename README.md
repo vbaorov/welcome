@@ -561,9 +561,46 @@ H2 DB의 경우 휘발성 데이터의 단점이 있는데, productdelivery 서�
 productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악하여 처리해야 되기 때문에 백업,복원기능과 안정성이 장점이 있는 mysql을 선택하여 구현하였다.
 
 
-# API 게이트웨이 
---
+# API 게이트웨이 (작성중)
 - API GW를 통하여 마이크로 서비스들의 진입점을 통일할 수 있는가?
+
+- application.yml
+```
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: productdelivery
+          uri: http://productdelivery:8080
+          predicates:
+            - Path=/stockDeliveries/** 
+        - id: order
+          uri: http://order:8080
+          predicates:
+            - Path=/orders/**
+        - id: orderstatus
+          uri: http://orderstatus:8080
+          predicates:
+            - Path=/orderStatus/**
+        - id: marketing
+          uri: http://marketing:8080
+          predicates:
+            - Path=/promotes/** 
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+```
 #### 답변
 아래는 MSAEZ를 통해 자동 생성된 gateway 서비스의 application.yml이며, 마이크로서비스들의 진입점을 통일하여 URL Path에 따라서 마이크로서비스별 서로 다른 포트로 라우팅시키도록 설정되었다.
 
