@@ -389,8 +389,8 @@ Payment서비스 pom.xml 의존성을 변경해 주었다.
 # 운영
 --
 # Deploy/Pipeline 
--- 
-(CI/CD 설정) BuildSpec.yml 사용 각 MSA 구현물은 git의 source repository 에 구성되었고, AWS의 CodeBuild를 활용하여 무정지 CI/CD를 설정하였다.
+
+- (CI/CD 설정) BuildSpec.yml 사용 각 MSA 구현물은 git의 source repository 에 구성되었고, AWS의 CodeBuild를 활용하여 무정지 CI/CD를 설정하였다.
 
 CodeBuild 설정
 
