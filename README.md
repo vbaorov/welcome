@@ -247,6 +247,7 @@ mvn spring-boot:run
 
 # DDD의 적용 (작성완료) 
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
+
 각 서비스 내에 도출된 핵심 Aggregate Root 객체를 Entity로 선언하였다. (주문(order), 배송(productdelivery), 마케팅(marketing)) 
 
 주문 Entity (Order.java) 
