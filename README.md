@@ -386,7 +386,7 @@ http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
 #### 주문취소하기 캡쳐화면
 
 
-# 동기식 호출과 Fallback 처리 (일부작성완료)
+# 동기식 호출과 Fallback 처리 (작성완료)
 
 (Request-Response 방식의 서비스 중심 아키텍처 구현)
 
