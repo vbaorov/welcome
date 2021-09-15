@@ -205,7 +205,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 - 쿠폰발행이 취소되면 배송팀에서 배송을 취소한다 (ok)
 ```
 
-### 비기능 요구사항에 대한 검증 
+### 비기능 요구사항에 대한 검증 (5개가 맞는지 검토 필요)
 
 ![비기능적 요구사항](https://user-images.githubusercontent.com/88864433/133370337-84871067-789e-48d1-89e4-486fd6d3e00e.PNG)
 
