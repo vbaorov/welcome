@@ -283,15 +283,42 @@ Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양�
 
 #### [주석] java 소스 구현한 방법에 대한 간략한 설명 필요
 
-productdelivery.java 
+promote.java 
 
 ``` 
-productdelivery.java 소스 일부 붙여넣기 
+@Entity
+@Table(name="Promote_table")
+public class Promote {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private String phoneNo;
+    private String username;
+    private Long orderId;
+    private String orderStatus;
+    private String productId;
+    private String payStatus;
+    private String couponId;
+    private String couponKind;
+    private String couponUseYn;
+    private String userId;
+
+    @PostPersist
+    public void onPostPersist(){
+        CouponPublished couponPublished = new CouponPublished();
+        BeanUtils.copyProperties(this, couponPublished);
+        couponPublished.publishAfterCommit();
+
+    }
+.... 생략 
+
 ```
 
 - 분석단계에서의 유비쿼터스 랭귀지 (업무현장에서 쓰는 용어) 를 사용하여 소스코드가 서술되었는가?
 가능한 현업에서 사용하는 언어를 모델링 및 구현시 그대로 사용하려고 노력하였다.  
 - 적용 후 Rest API의 테스트
+
 #### 주문 결제 후 ordermgmts 주문 접수하기 POST 
 
 ```
