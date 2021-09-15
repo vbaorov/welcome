@@ -245,9 +245,8 @@ cd marketing
 mvn spring-boot:run 
 ```
 
-# DDD의 적용
---
-	- Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
+# DDD의 적용 (작성완료) 
+- Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
 각 서비스 내에 도출된 핵심 Aggregate Root 객체를 Entity로 선언하였다. (주문(order), 배송(productdelivery), 마케팅(marketing)) 
 
 주문 Entity (Order.java) 
@@ -256,6 +255,7 @@ mvn spring-boot:run
 @Table(name="Order_table")
 public class Order {
 
+    
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
@@ -277,6 +277,8 @@ public class Order {
     @PostPersist
     public void onPostPersist(){
     	
+         Logger logger = LoggerFactory.getLogger(this.getClass());
+
     	
         OrderPlaced orderPlaced = new OrderPlaced();
         BeanUtils.copyProperties(this, orderPlaced);
@@ -284,9 +286,31 @@ public class Order {
         System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
         System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
         System.out.println("\n\n##### productid : "+this.productId + "\n\n");
-        
-        
-    } 
+        logger.debug("OrderService");
+    }
+
+    @PostUpdate
+    public void onPostUpdate() {
+    	
+    	OrderCanceled orderCanceled = new OrderCanceled();
+        BeanUtils.copyProperties(this, orderCanceled);
+        orderCanceled.publishAfterCommit();
+    }
+    
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
     
 ....생략 
 
@@ -324,21 +348,35 @@ public class Promote {
         couponPublished.publishAfterCommit();
 
     }
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getPhoneNo() {
+		return phoneNo;
+	}
 .... 생략 
 
 ```
 
 - 분석단계에서의 유비쿼터스 랭귀지 (업무현장에서 쓰는 용어) 를 사용하여 소스코드가 서술되었는가?
-가능한 현업에서 사용하는 언어를 모델링 및 구현시 그대로 사용하려고 노력하였다.  
+가능한 현업에서 사용하는 언어를 모델링 및 구현시 그대로 사용하려고 노력하였다. 
+
 - 적용 후 Rest API의 테스트
-
-#### 주문 결제 후 ordermgmts 주문 접수하기 POST 
+주문 결제 후 productdelivery 주문 접수하기 POST
 
 ```
-#### http localhost:8082/ordermgmts orderId=1 itemId=1 itemName="ITbook" qty=1 customerName="HanYongSun" deliveryAddress="kyungkido sungnamsi" deliveryPhoneNumber="01012341234" orderStatus="order"
-```
+#### (명령어수정필요)
+http localhost:8082/ordermgmts orderId=1 itemId=1 itemName="ITbook" qty=1 customerName="HanYongSun" deliveryAddress="kyungkido sungnamsi" deliveryPhoneNumber="01012341234" orderStatus="order"
 #### POST 캡쳐화면 
 
+```
+#### 작성필요
 order 주문 취소하기 PATCH
 ```
 http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
@@ -346,55 +384,69 @@ http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
 
 #### 주문취소하기 캡쳐화면
 
-# 동기식 호출과 Fallback 처리 (작성완료)
+
+# 동기식 호출과 Fallback 처리 (일부작성완료)
 
 (Request-Response 방식의 서비스 중심 아키텍처 구현)
 
 - 마이크로 서비스간 Request-Response 호출에 있어 대상 서비스를 어떠한 방식으로 찾아서 호출 하였는가? (Service Discovery, REST, FeignClient)
 
-요구사항대로 주문이 들어와야지만 결제 서비스를 호출할 수 있도록 주문 시 결제 처리를 동기식으로 호출하도록 한다.
+요구사항대로 배송팀에서는 쿠폰이 발행된 것을 확인한 후에 배송을 시작한다.
 
-Order.java Entity Class에 @PostPersist로 주문 생성 직후 결제를 호출하도록 처리하였다
+Promote.java Entity Class에 @PostPersist로 주문 생성 직후 결제를 호출하도록 처리하였다
 
 ```
-    @PostPersist
+   @PostPersist
     public void onPostPersist(){
-    	
-         Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    	
-        OrderPlaced orderPlaced = new OrderPlaced();
-        BeanUtils.copyProperties(this, orderPlaced);
-        orderPlaced.publishAfterCommit();
-        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
-        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
-        System.out.println("\n\n##### productid : "+this.productId + "\n\n");
-        logger.debug("OrderService");
+        CouponPublished couponPublished = new CouponPublished();
+        BeanUtils.copyProperties(this, couponPublished);
+        couponPublished.publishAfterCommit();
     }
+    
 ```
-
+... 이후에 작성해야 함. 
 
 # 비동기식 호출과 Eventual Consistency 
---
+-- 주문취소 후에 배송이 취소되는 과정이 비동기식일까?? 
+
 (이벤트 드리븐 아키텍처)
 
-카프카를 이용하여 PubSub 으로 하나 이상의 서비스가 연동되었는가?
-#### 답변 
-Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리할때 어떤 건에 연결된 처리건인지를 구별하기 위한 Correlation-key 연결을 제대로 구현 하였는가?
+- 카프카를 이용하여 PubSub 으로 하나 이상의 서비스가 연동되었는가?
+- Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리할때 어떤 건에 연결된 처리건인지를 구별하기 위한 Correlation-key 연결을 제대로 구현 하였는가?
+
+
+
+#### 답변
+...작성필요 
+예시) 
 카프카를 이용하여 주문완료 시 결제 처리를 제외한 나머지 모든 마이크로서비스 트랜잭션은 Pub/Sub 관계로 구현하였다.
 아래는 주문취소 이벤트(OrderCanceled)를 카프카를 통해 주문관리(ordermanagement) 서비스에 연계받는 코드 내용이다.
 
 
 # SAGA 패턴 
---
 - 취소에 따른 보상 트랜잭션을 설계하였는가(Saga Pattern)
+
 #### 답변 : 
 상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 
 
+### SAGA 패턴에 맞춘 트랜잭션 실행 (캡쳐화면) 
+
+
+
 
 # CQRS 
---
 - CQRS: Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능한가?
+
+주문/배송상태가 바뀔 때마다 고객이 현재 상태를 확인할 수 있어야 한다는 요구사항에 따라 주문 서비스 내에 OrderStatus View를 모델링하였다
+
+![VIEW](https://user-images.githubusercontent.com/88864433/133460922-a8cee0b2-5449-4a11-b8a2-cea31e7ea4cc.PNG)
+
+주문에 대한 결제완료(PayStatus) 시 orderId를 키값으로 OrderStatus 데이터도 생성되며 (주문과 결제를 동시에 처리했을 때 배송을 시작하므로)
+
+"결제완료(주문완료), 주문접수, 배송시작, 결제취소(주문취소)"의 이벤트에 따라 주문상태가 업데이트되도록 모델링하였다.
+
+![view 속성](https://user-images.githubusercontent.com/88864433/133461548-fb7be513-952e-4c64-bc44-f8ffc867a565.PNG)
+
 
 
 - CQRS 테스트 
