@@ -239,9 +239,48 @@ mvn spring-boot:run
 
 주문 Entity (Order.java) 
 ```
-Order.java 소스 일부 붙여넣기 
+@Entity
+@Table(name="Order_table")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private String username;
+    private String address;
+    private String phoneNo;
+    private String productId;
+    private int qty; //type change
+    private String payStatus;
+    private String userId;
+    private String orderStatus;
+    private Date orderDate;
+    private String productName;
+    private Long productPrice;
+    private String couponId;
+    private String couponKind;
+    private String couponUseYn;
+
+    @PostPersist
+    public void onPostPersist(){
+    	
+    	
+        OrderPlaced orderPlaced = new OrderPlaced();
+        BeanUtils.copyProperties(this, orderPlaced);
+        orderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
+        System.out.println("\n\n##### productid : "+this.productId + "\n\n");
+        
+        
+    } 
+    
+....생략 
+
 ```
+
 Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 하였고 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
+
 #### [주석] java 소스 구현한 방법에 대한 간략한 설명 필요
 
 productdelivery.java 
