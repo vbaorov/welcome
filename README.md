@@ -942,6 +942,16 @@ spec:
             claimName: aws-efs
 ```
 
+- application.yml
+```
+logging:
+  path: /logs/order
+  file:
+    max-history: 30
+  level:
+    org.springframework.cloud: debug
+```
+
 - 최종 테스트 화면
 
 ![pvc_최종](https://user-images.githubusercontent.com/88864433/133479414-111980fb-598b-4e5a-8f13-24255d11f53a.PNG)
