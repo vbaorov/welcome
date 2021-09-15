@@ -21,7 +21,7 @@
     - [Autoscale (HPA)](#autoscale-(hpa))
     - [Zero-downtime deploy (Readiness Probe)](#zerodowntime-deploy-(readiness-Probe))
     - [Self-healing (Liveness Probe)](#self-healing-(liveness-probe))
-    - 운영유연성(#운영유연성)
+    - 운영유연성 (#운영유연성)
 
 
 
