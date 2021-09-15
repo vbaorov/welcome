@@ -575,6 +575,10 @@ productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악�
 
 ![CICD](https://user-images.githubusercontent.com/88864433/133468925-a9ba1fec-8331-4a68-a0b7-2b570e4182de.PNG)
 
+![CODEBUILD1](https://user-images.githubusercontent.com/88864433/133469657-2b250c1e-777d-4d18-8ae9-c631ba9fa9f6.PNG)
+
+![codebuild2](https://user-images.githubusercontent.com/88864433/133469760-d091efc6-5d09-4c25-a324-337f0b5e0d87.PNG)
+
 CodeBuild 설정
 
 빌드 프로젝드 생성(각 MSA별 별도 설정)
