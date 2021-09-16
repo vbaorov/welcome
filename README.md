@@ -867,9 +867,12 @@ Hystrix 를 설정: 요청처리 쓰레드에서 처리시간이 610 ms가 넘�
 -- 
 
 # Zero-downtime deploy (Readiness Probe) 
--- 
-(무정지 배포) 서비스의 무정지 배포를 위하여 주문관리(Ordermanagement) 서비스의 배포 yaml 파일에 readinessProbe 옵션을 추가하였다.
+(무정지 배포) 
+서비스의 무정지 배포를 위하여 오더(Order) 서비스의 배포 yaml 파일에 readinessProbe 옵션을 추가하였다.
 
+![readness1](https://user-images.githubusercontent.com/88864433/133539552-06cc7425-1cb5-4319-b92b-c7c20d807c69.PNG)
+
+![readness2](https://user-images.githubusercontent.com/88864433/133539593-37ea6cf1-ce76-4d5e-bf21-b6f3ec85079c.PNG)
 
 
 # Self-healing (Liveness Probe) 
