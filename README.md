@@ -875,9 +875,53 @@ Hystrix 를 설정: 요청처리 쓰레드에서 처리시간이 610 ms가 넘�
 ![readness2](https://user-images.githubusercontent.com/88864433/133539593-37ea6cf1-ce76-4d5e-bf21-b6f3ec85079c.PNG)
 
 
-# Self-healing (Liveness Probe) 
--- 
-주문관리(Ordermanagement) 서비스의 배포 yaml 파일에 Pod 내 /tmp/healthy 파일을 5초마다 체크하도록 livenessProbe 옵션을 추가하였다
+# Self-healing (Liveness Probe) 작성완료
+
+deployment.yml 
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productdelivery
+  labels:
+    app: productdelivery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productdelivery
+  template:
+    metadata:
+      labels:
+        app: productdelivery
+    spec:
+      containers:
+        - name: productdelivery
+          image: 879772956301.dkr.ecr.ap-southeast-1.amazonaws.com/productdelivery:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+```
+주문배송(Productdelivery) 서비스의 배포 yaml 파일에 Pod 내 /actuator/health 파일을 5초마다 체크하도록 livenessProbe 옵션을 추가하였다
+
+![liveness](https://user-images.githubusercontent.com/88864433/133543120-baca4cf7-fe8e-4b13-afb3-9f101d5b6060.PNG)
+
 
 # 운영유연성
 - 데이터 저장소를 분리하기 위한 Persistence Volume과 Persistence Volume Claim을 적절히 사용하였는가?
