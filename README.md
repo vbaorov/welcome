@@ -387,8 +387,16 @@ public interface PromoteRepository extends PagingAndSortingRepository<Promote, L
 주문 결제 후 productdelivery 주문 접수하기 POST
 
 ```
-#### (명령어수정필요)
-http localhost:8082/ordermgmts orderId=1 itemId=1 itemName="ITbook" qty=1 customerName="HanYongSun" deliveryAddress="kyungkido sungnamsi" deliveryPhoneNumber="01012341234" orderStatus="order"
+#### (명령어수정필요) 아래는 예시
+# wellbing 서비스의 체크인 처리
+http http://localhost:8081/eats number=3000
+
+# wellbing 서비스의 체크아웃 후 point 서비스의 적립 처리
+http PUT http://localhost:8081/eats/1 number=3000
+
+# 적립 상태 확인
+http http://localhost:8082/earns/1
+
 #### POST 캡쳐화면 
 
 ```
@@ -504,28 +512,104 @@ public class PromoteServiceFallback implements PromoteService {
 ```
 
 
-# 비동기식 호출과 Eventual Consistency 
--- 주문취소 후에 배송이 취소되는 과정이 비동기식일까?? 
+# 비동기식 호출과 Eventual Consistency (작성완료)
 
 (이벤트 드리븐 아키텍처)
 
 - 카프카를 이용하여 PubSub 으로 하나 이상의 서비스가 연동되었는가?
 - Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리할때 어떤 건에 연결된 처리건인지를 구별하기 위한 Correlation-key 연결을 제대로 구현 하였는가?
 
+#### 답변 (검토필요) 
+
+주문/주문취소 후에 이를 배송팀에 알려주는 트랜잭션은 Pub/Sub 관계로 구현하였다.
+아래는 주문/주문취소 이벤트를 통해 kafka를 통해 배송팀 서비스에 연계받는 코드 내용이다. 
+
+```
+
+    @PostPersist
+    public void onPostPersist(){
+    	
+         Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    	
+        OrderPlaced orderPlaced = new OrderPlaced();
+        BeanUtils.copyProperties(this, orderPlaced);
+        orderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
+        System.out.println("\n\n##### productid : "+this.productId + "\n\n");
+        logger.debug("OrderService");
+    }
+
+    @PostUpdate
+    public void onPostUpdate() {
+    	
+    	OrderCanceled orderCanceled = new OrderCanceled();
+        BeanUtils.copyProperties(this, orderCanceled);
+        orderCanceled.publishAfterCommit();
+    }
+```
+- 배송팀에서는 주문/주문취소 접수 이벤트에 대해 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler를 구현한다. 
+
+```
+@Service
+public class PolicyHandler{
+    @Autowired StockDeliveryRepository stockDeliveryRepository;
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverOrderPlaced_AcceptOrder(@Payload OrderPlaced orderPlaced){
+
+        if(!orderPlaced.validate()) return;
+...중략 
+
+         stockDeliveryRepository.save(delivery);
+
+    }
+    private Integer parseInt(String qty) {
+        return null;
+    }
+    /*
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverOrderCanceled_CancleOrder(@Payload OrderCanceled orderCanceled){
+        if(!orderCanceled.validate()) return;
+        Long orderId =Long.valueOf(orderCanceled.getId());
+        stockDeliveryRepository.deleteById(orderId); 
+        
+        stockDeliveryRepository.s
+    }
+    */
+    
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverOrderCanceled_CancleOrder(@Payload OrderCanceled orderCanceled) {
+    	
+    	if(!orderCanceled.validate()) return;
+... 중략
+        for (StockDelivery delivery:deliveryList)
+        {
+        	System.out.println("\n\n"+orderCanceled.getId());
+            delivery.setDeliveryStatus("delivery Canceled");
+            stockDeliveryRepository.save(delivery);
+        }
+     
+    }
+
+}
+```
 
 
-#### 답변
-...작성필요 
-예시) 
-카프카를 이용하여 주문완료 시 결제 처리를 제외한 나머지 모든 마이크로서비스 트랜잭션은 Pub/Sub 관계로 구현하였다.
-아래는 주문취소 이벤트(OrderCanceled)를 카프카를 통해 주문관리(ordermanagement) 서비스에 연계받는 코드 내용이다.
 
 
-# SAGA 패턴 
+
+
+
+
+
+# SAGA 패턴 (작성필요) 
 - 취소에 따른 보상 트랜잭션을 설계하였는가(Saga Pattern)
 
 #### 답변 : 
 상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 
+
 
 ### SAGA 패턴에 맞춘 트랜잭션 실행 (캡쳐화면) 
 
