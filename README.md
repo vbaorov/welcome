@@ -133,10 +133,15 @@
 - MSAEz로 모델링한 이벤트스토밍 결과
 https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa837bc508a68029
 
+
 ### 이벤트 도출
 
 ![1](https://user-images.githubusercontent.com/88864433/133356420-db8f0cf8-a3f6-4d24-8242-e9e739401045.PNG)
- 
+
+```
+1차적으로 필요하다고 생각되는 이벤트를 도출하였다 
+``` 
+
 ### 부적격 이벤트 탈락
 
 ![2](https://user-images.githubusercontent.com/88864433/133356470-ee9c68e5-50c7-45b8-8bf2-15b9ee408036.PNG)
@@ -159,7 +164,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 ![5](https://user-images.githubusercontent.com/88864433/133261206-85a09dd0-b646-4e4a-b499-8009f92570a1.PNG)
  
 ``` 
-- 고객의 주문, 점주의 배송관리, 마케팅의 쿠폰관리는 command와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 묶어줌
+- 고객의 주문후 배송팀의 배송관리, 마케팅의 쿠폰관리는 command와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 묶어줌
 ```
 
 ### 바운디드 컨텍스트로 묶기
