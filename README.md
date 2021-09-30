@@ -186,7 +186,8 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 ```
 - 과정 중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
 - ‘재고가 충족됨’, ‘재고가 부족함’ 은 배송 이벤트를 수행하기 위한 내용에 가까우므로 이벤트에서 제외
-- 주문과 결제는 동시에 이루어진다고 봐서 주문과 결제를 묶음 
+- 주문과 결제는 동시에 이루어진다고 봐서 주문과 결제를 묶음
+#### - 전화주문을 확인하는 과정은 필요없다고 생각하여 탈락하고, 오더와 동일하게 전화주문과 결제는 묶음. 
 ```
 
 ![3_탈락후결과](https://user-images.githubusercontent.com/88864433/134791195-ade44b8a-470c-4c09-99b4-bc769647e464.PNG)
@@ -205,6 +206,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
  
 ``` 
 - 고객의 주문후 배송팀의 배송관리, 마케팅의 쿠폰관리는 command와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 묶어줌
+##### - 전화주문의 경우도 일반주문과 동일하게 배송팀의 배송관리, 마케팅의 쿠폰관리에 의해 트랜잭션이 유지되어야 한다. 
 ```
 
 ### 바운디드 컨텍스트로 묶기
@@ -214,7 +216,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
  
 ```
 - 도메인 서열 분리 
-    - Core Domain:  order, delivery : 없어서는 안될 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 order의 경우 1주일 1회 미만, delivery의 경우 1개월 1회 미만
+    #####- Core Domain:  order, delivery, callorder : 없어서는 안될 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 order의 경우 1주일 1회 미만, delivery의 경우 1개월 1회 미만
     - Supporting Domain:  marketing : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함
 ```
 ### 폴리시 부착
@@ -239,20 +241,20 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 
 ```
-- 고객이 물건을 주문하고 결제한다 (ok)
-- 결제가 완료되면 주문 내역이 배송팀에 전달된다 (ok)
-- 마케팅팀에서 쿠폰을 발행한다 (ok) 
-- 쿠폰이 발행된 것을 확인하고 배송을 시작한다 (ok)
+##### - 고객이 전화를 통해 주문하고 결제한다 (ok)
+##### - 결제가 완료되면 주문 내역이 배송팀에 전달된다. (ok)
+##### - 마케팅팀에서 쿠폰을 발행한다 (ok)
+##### - 쿠폰이 발행된 것을 확인하고 배송을 시작한다 (ok)
 ```
 ![10_주문취소에대한검증](https://user-images.githubusercontent.com/88864433/134791230-c1b500e0-11ff-49fe-a28f-644e0d0300b8.PNG)
 
 
 ``` 
-- 고객이 주문을 취소할 수 있다 (ok)
-- 주문을 취소하면 결제도 함께 취소된다 (ok)
-- 주문이 취소되면 배송팀에 전달된다 (ok)
-- 마케팅팀에서 쿠폰발행을 취소한다 (ok)
-- 쿠폰발행이 취소되면 배송팀에서 배송을 취소한다 (ok)
+#####- 고객이 전화로 주문을 취소할 수 있다 (ok)
+#####- 전화로 주문을 취소하면 결제도 함께 취소된다 (ok)
+#####- 전화로 주문이 취소되면 배송팀에 전달된다 (ok)
+#####- 마케팅팀에서 쿠폰발행을 취소한다 (ok)
+#####- 쿠폰발행이 취소되면 배송팀에서 배송을 취소한다 (ok)
 ```
 
 ### 비기능 요구사항에 대한 검증 
@@ -261,16 +263,14 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 
 ```
-1. [설계/구현]Req/Resp : 쿠폰이 발행된 건에 한하여 배송을 시작한다. 
-2. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
-3. [설계/구현]Correlation : 주문을 취소하면 -> 쿠폰을 취소하고 -> 배달을 취소 후 주문 상태 변경
-4. [설계/구현]saga : 서비스(상품팀, 상품배송팀, 마케팅팀)는 단일 서비스 내의 데이터를 처리하고, 각자의 이벤트를 발행하면 연관된 서비스에서 이벤트에 반응하여 각자의 데이터를 변경시킨다.
-5. [설계/구현/운영]circuit breaker : 배송 요청 건수가 임계치 이상 발생할 경우 Circuit Breaker 가 발동된다. 
+1. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
+2. [설계/구현]Correlation : 고객이 전화로 주문을 취소하면 -> 쿠폰을 취소하고 -> 배달을 취소 후 주문 상태 변경
+3. [설계/구현]saga : 서비스(전화상품팀, 상품팀, 상품배송팀, 마케팅팀)는 단일 서비스 내의 데이터를 처리하고, 각자의 이벤트를 발행하면 연관된 서비스에서 이벤트에 반응하여 각자의 데이터를 변경시킨다.
 ``` 
 
 ### 헥사고날 아키텍처 다이어그램 도출 (업데이트 필요) 
 
-![분산스트림2](https://user-images.githubusercontent.com/88864433/133557657-451e67e9-400a-477c-af09-2bfd56f9a659.PNG)
+![12_헥사고날](https://user-images.githubusercontent.com/88864433/135393741-d717527b-f96c-4fe7-866b-53c6f69cd638.PNG)
  
 
 ```
@@ -292,14 +292,19 @@ mvn spring-boot:run
 
 cd marketing
 mvn spring-boot:run 
+
+cd callorder
+mvn spring-bott:run
+
 ```
 
 # DDD의 적용
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
 
 각 서비스 내에 도출된 핵심 Aggregate Root 객체를 Entity로 선언하였다. (주문(order), 배송(productdelivery), 마케팅(marketing)) 
+##### 전화주문의 경우는 크게 주문의 범주에 들어가므로 주문의 Entity와 동일하게 사용하나 소스는 따로 구현한다.
 
-주문 Entity (Order.java) 
+주문 Entity (CallOrder.java) 
 ```
 @Entity
 @Table(name="Order_table")
@@ -330,21 +335,21 @@ public class Order {
          Logger logger = LoggerFactory.getLogger(this.getClass());
 
     	
-        OrderPlaced orderPlaced = new OrderPlaced();
-        BeanUtils.copyProperties(this, orderPlaced);
-        orderPlaced.publishAfterCommit();
-        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
-        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
+        CallOrderPlaced callorderPlaced = new CallOrderPlaced();
+        BeanUtils.copyProperties(this, callorderPlaced);
+        callorderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### CallOrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### callorderplace : "+callorderPlaced.toJson() + "\n\n");
         System.out.println("\n\n##### productid : "+this.productId + "\n\n");
-        logger.debug("OrderService");
+        logger.debug("CallOrderService");
     }
 
     @PostUpdate
     public void onPostUpdate() {
     	
-    	OrderCanceled orderCanceled = new OrderCanceled();
-        BeanUtils.copyProperties(this, orderCanceled);
-        orderCanceled.publishAfterCommit();
+    	CallOrderCanceled callorderCanceled = new CallOrderCanceled();
+        BeanUtils.copyProperties(this, callorderCanceled);
+        callorderCanceled.publishAfterCommit();
     }
     
     public Long getId() {
@@ -357,10 +362,6 @@ public class Order {
     public String getUsername() {
         return username;
     }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
     
 ....생략 
 
@@ -368,108 +369,15 @@ public class Order {
 
 Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 하였고 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
 
-OrderRepository.java
+CallOrderRepository.java
 
 ```
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-public interface OrderRepository extends PagingAndSortingRepository<Order, Long>{
+
+@RepositoryRestResource(collectionResourceRel = "callorders", path = "callorders")
+public interface CallOrderRepository extends PagingAndSortingRepository<CallOrder, Long> {
 	
-}
-```
-
-배송팀의 StockDelivery.java
-
-```
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-```
-```
-@Entity
-@Table(name="StockDelivery_table")
-public class StockDelivery {
-
-     //Distance 삭제 및 Id auto로 변경
-    
-    private Long orderId;
-    private String orderStatus;
-    private String userName;
-    private String address;
-    private String productId;
-    private Integer qty;
-    private String storeName;
-    private Date orderDate;
-    private Date confirmDate;
-    private String productName;
-    private String phoneNo;
-    private Long productPrice;
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private String customerId;
-    private String deliveryStatus;
-    private Date deliveryDate;
-    private String userId;
-    
-    private static final String DELIVERY_STARTED = "delivery Started";
-    private static final String DELIVERY_CANCELED = "delivery Canceled";
-... 생략 
-```
-
-마케팅의 promote.java 
-
-``` 
-@Entity
-@Table(name="Promote_table")
-public class Promote {
-
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private String phoneNo;
-    private String username;
-    private Long orderId;
-    private String orderStatus;
-    private String productId;
-    private String payStatus;
-    private String couponId;
-    private String couponKind;
-    private String couponUseYn;
-    private String userId;
-
-    @PostPersist
-    public void onPostPersist(){
-        CouponPublished couponPublished = new CouponPublished();
-        BeanUtils.copyProperties(this, couponPublished);
-        couponPublished.publishAfterCommit();
-
-    }
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getPhoneNo() {
-		return phoneNo;
-	}
-.... 생략 
-
-```
-
-PromoteRepository.java
-
-```
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-public interface PromoteRepository extends PagingAndSortingRepository<Promote, Long>{
-
-	List<Promote> findByOrderId(Long orderId);
-
 }
 ```
 
@@ -477,20 +385,20 @@ public interface PromoteRepository extends PagingAndSortingRepository<Promote, L
 가능한 현업에서 사용하는 언어를 모델링 및 구현시 그대로 사용하려고 노력하였다. 
 
 - 적용 후 Rest API의 테스트
-주문 결제 후 productdelivery 주문 접수하기 POST
+전화주문 결제 후 productdelivery 주문 접수하기 POST
 
 ```
 [시나리오 1]
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“Seoul” productId=“1001" payStatus=“Y” phoneNo=“01011110000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“England” productId=“2001” payStatus=“Y” phoneNo=“0102220000” productName=“gram” productPrice=9000000 qty=1 userId=“gentleman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“USA” productId=“3001" payStatus=“Y” phoneNo=“01030000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“USA” productId=“3001” payStatus=“Y” phoneNo=“01030000” productName=“Mac” productPrice=3000000 qty=1 userId=“last test” username=“last test”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“Seoul” productId=“1001" payStatus=“Y” phoneNo=“01011110000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“England” productId=“2001” payStatus=“Y” phoneNo=“0102220000” productName=“gram” productPrice=9000000 qty=1 userId=“gentleman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“USA” productId=“3001" payStatus=“Y” phoneNo=“01030000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“USA” productId=“3001” payStatus=“Y” phoneNo=“01030000” productName=“Mac” productPrice=3000000 qty=1 userId=“last test” username=“last test”
 [시나리오 2]
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/1 orderStatus=“Order Canceled”
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/3 orderStatus=“Order Canceled”
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/5 orderStatus=“Order Canceled”
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/1 orderStatus=“Order Canceled”
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/3 orderStatus=“Order Canceled”
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/5 orderStatus=“Order Canceled”
 [체크]
-http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders
+http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders
 http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orderStatus
 http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/stockDeliveries
 http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/promotes
