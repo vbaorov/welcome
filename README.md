@@ -712,17 +712,14 @@ Gateway의 application.yml이며, 마이크로서비스들의 진입점을 세�
 
 ```
 version: 0.2
-​
+
 env:
   variables:
-    IMAGE_REPO_NAME: "order"
+    IMAGE_REPO_NAME: "callorder"
     CODEBUILD_RESOLVED_SOURCE_VERSION: "latest"
-​
+
 phases:
   install:
-    commands:    
-      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2&
-      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
     runtime-versions:
       java: corretto11
       docker: 18
@@ -746,35 +743,11 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-​
+
 cache:
   paths:
-    - '/root/.m2/**/*' 
+    - '/root/.m2/**/*'
 ```
-
-# 동기식 호출 / Circuit Breaker / 장애격리
-오더 요청이 과도할 경우 서킷 브레이크를 통해 장애 격리를 하려고 한다.
-
-- 부하테스터 siege툴을 통한 Circuit Breaker 동작 확인 : 
-- 동시사용자 50명
-- 30초간 실시
-- marketing 서비스의 req/res 호출 후 저장전 sleep 을 진행한다.
-
-```
-siege -c50 -t30S -r10 -v --content-type "application/json" 'http://localhost:8081/stockDeliveries POST {"orderId": 1, "orderStatus": "test", "userName": "test", "qty": 10, "deliveryStatus": "delivery Started"}'
-```
-
-
-![ciruit1](https://user-images.githubusercontent.com/88864433/133549822-19fa0ac7-6876-4b76-b2fb-9d64e0feace3.PNG)
-
-![circuit2](https://user-images.githubusercontent.com/88864433/133549882-3b653f1e-6c84-4abb-b073-b5cca21ddda2.PNG)
-
-![circuit3](https://user-images.githubusercontent.com/88864433/133549892-99e332ac-18fe-4b4e-9737-b4341b66985f.PNG)
-
-![circuit4](https://user-images.githubusercontent.com/88864433/133550076-1789913a-d545-4c18-9fc3-3afe0e03c8e2.PNG)
-
-![circuit5](https://user-images.githubusercontent.com/88864433/133550122-22b8de48-faeb-4079-8bcf-9d6b48f5a457.PNG)
-
 
 
 # Autoscale(HPA)
