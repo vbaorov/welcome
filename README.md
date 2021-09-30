@@ -407,109 +407,6 @@ http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.a
 ```
 
 
-# 동기식 호출과 Fallback 처리
-
-(Request-Response 방식의 서비스 중심 아키텍처 구현)
-
-- 마이크로 서비스간 Request-Response 호출에 있어 대상 서비스를 어떠한 방식으로 찾아서 호출 하였는가? (Service Discovery, REST, FeignClient)
-
-요구사항대로 배송팀에서는 쿠폰이 발행된 것을 확인한 후에 배송을 시작한다.
-
-StockDelivery.java Entity Class에 @PostPersist로 쿠폰 발행 후에 배송을 시작하도록 처리하였다.
-
-```
-    @PostPersist
-    public void onPostPersist() throws Exception{
-
-    	Promote promote = new Promote();
-        promote.setPhoneNo(this.phoneNo); 
-        promote.setUserId(this.userId); 
-        promote.setUsername(this.userName); 
-        promote.setOrderId(this.orderId); 
-        promote.setOrderStatus(this.orderStatus); 
-        promote.setProductId(this.productId); 
-        System.out.println("\n\npostpersist() : "+this.deliveryStatus +"\n\n");
-        // deliveryStatus 따라 로직 분기
-        if(DELIVERY_STARTED == this.deliveryStatus){
-        	
-	        boolean result = (boolean) ProductdeliveryApplication.applicationContext.getBean(food.delivery.work.external.PromoteService.class).publishCoupon(promote);
-	
-	        if(result){
-	        	System.out.println("----------------");
-	            System.out.println("Coupon Published");
-	            System.out.println("----------------");
-		       	DeliveryStarted deliveryStarted = new DeliveryStarted();
-		        BeanUtils.copyProperties(this, deliveryStarted);
-		        deliveryStarted.publishAfterCommit();
-	        }else {
-	        	throw new RollbackException("Failed during coupon publish");
-	        }
-        
-        }
-  
-    }
-    
-```
-
-##### 동기식 호출은 PromoteService 클래스를 두어 FeignClient 를 이용하여 호출하도록 하였다.
-
-- PromoteService.java
-
-```
-  
-package food.delivery.work.external;
-
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import food.delivery.work.Promote;
-
-import org.springframework.web.bind.annotation.RequestBody;
-
-@FeignClient(name="marketing", url = "${api.promote.url}", fallback = PromoteServiceFallback.class)
-public interface PromoteService {
-  
-    @RequestMapping(method=RequestMethod.POST, path="/createPromoteInfo")
-    public boolean publishCoupon(@RequestBody Promote promote);
-    
-    @RequestMapping(method=RequestMethod.POST, path="/cancelCoupon")
-    public boolean cancelCoupon(@RequestBody Promote promote);
-}
-```
-
-- PromoteServiceFallback.java
-
-```
-  
-package food.delivery.work.external;
-
-import org.springframework.stereotype.Component;
-
-import food.delivery.work.Promote;
-
-@Component
-public class PromoteServiceFallback implements PromoteService {
-    @Override
-    public boolean publishCoupon(Promote promote) {
-        //do nothing if you want to forgive it
-
-        System.out.println("Circuit breaker has been opened. Fallback returned instead.");
-        return false;
-    }
-    
-    @Override
-    public boolean cancelCoupon(Promote promote) {
-        //do nothing if you want to forgive it
-
-        System.out.println("Circuit breaker has been opened. Fallback returned instead.");
-        return false;
-    }
-}
-```
-
-
 # 비동기식 호출과 Eventual Consistency (작성완료)
 
 (이벤트 드리븐 아키텍처)
@@ -527,24 +424,25 @@ public class PromoteServiceFallback implements PromoteService {
          Logger logger = LoggerFactory.getLogger(this.getClass());
 
     	
-        OrderPlaced orderPlaced = new OrderPlaced();
-        BeanUtils.copyProperties(this, orderPlaced);
-        orderPlaced.publishAfterCommit();
-        System.out.println("\n\n##### OrderService : onPostPersist()" + "\n\n");
-        System.out.println("\n\n##### orderplace : "+orderPlaced.toJson() + "\n\n");
+        CallOrderPlaced callorderPlaced = new CallOrderPlaced();
+        BeanUtils.copyProperties(this, callorderPlaced);
+        callorderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### CallOrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### callorderplace : "+callorderPlaced.toJson() + "\n\n");
         System.out.println("\n\n##### productid : "+this.productId + "\n\n");
-        logger.debug("OrderService");
+        logger.debug("CallOrderService");
     }
 
     @PostUpdate
     public void onPostUpdate() {
     	
-    	OrderCanceled orderCanceled = new OrderCanceled();
-        BeanUtils.copyProperties(this, orderCanceled);
-        orderCanceled.publishAfterCommit();
+    	CallOrderCanceled callorderCanceled = new CallOrderCanceled();
+        BeanUtils.copyProperties(this, callorderCanceled);
+        callorderCanceled.publishAfterCommit();
     }
 ```
-- 배송팀에서는 주문/주문취소 접수 이벤트에 대해 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler를 구현한다. 
+
+- 배송팀에서는 전화주문/전화주문취소 접수 이벤트에 대해 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler를 구현한다. 
 
 ```
 Service
@@ -602,8 +500,8 @@ public class PolicyHandler{
 다만 데이터의 원자성을 보장해주지 않기 때문에 추후 order service 에서 재고 정보를 확인한 이후에 주문수락을 진행하거나, 상품배송 서비스에서 데이터 변경전 재고 여부를 확인하여 롤백 이벤트를 보내는 로직이 필요할 것으로 판단된다. 
 
 
-order 서비스가  고객으로 주문 및 결제(order and pay) 요청을 받고
-[order 서비스]
+callorder 서비스가  고객으로 주문 및 결제(order and pay) 요청을 받고
+[callorder 서비스]
 Order aggegate의 값들을 추가한 이후 주문완료됨(OrderPlaced) 이벤트를 발행한다. - 첫번째 
 
 ![saga1](https://user-images.githubusercontent.com/88864433/133546289-8b2cf493-7296-4464-944a-1c112f77b500.PNG)
