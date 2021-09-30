@@ -11,7 +11,6 @@
   - [분석/설계](#분석설계)
   - [구현:](#구현)
     - [DDD 의 적용](#DDD의-적용)
-    - [동기식 호출과 Fallback 처리](#동기식-호출과-Fallback-처리) 
     - [비동기식 호출과 Eventual Consistency](#비동기식-호출과-Eventual-Consistency) 
     - [폴리글랏 퍼시스턴스](#폴리글랏-퍼시스턴스)
     - [API 게이트웨이](#API-게이트웨이)
@@ -439,9 +438,7 @@ http GET http://localhost:8083/promotes
 http GET http://localhost:8085/callorders
 ```
 
-- callorder POST 
 
-![post_callorder](https://user-images.githubusercontent.com/88864433/135461482-8bd3b542-28ea-4d98-8d95-3208f7fd2dc9.PNG)
 
 - callorder GET 
 
@@ -537,155 +534,9 @@ public class PolicyHandler{
 
 }
 ```
+- Scaling-out: Message Consumer 마이크로서비스의 Replica 를 추가했을때 중복없이 이벤트를 수신할 수 있는가?
 
-
-# SAGA 패턴
-- 취소에 따른 보상 트랜잭션을 설계하였는가?(Saga Pattern)
-
-상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 
-다만 데이터의 원자성을 보장해주지 않기 때문에 추후 order service 에서 재고 정보를 확인한 이후에 주문수락을 진행하거나, 상품배송 서비스에서 데이터 변경전 재고 여부를 확인하여 롤백 이벤트를 보내는 로직이 필요할 것으로 판단된다. 
-
-
-callorder 서비스가  고객으로 주문 및 결제(order and pay) 요청을 받고
-[callorder 서비스]
-Order aggegate의 값들을 추가한 이후 주문완료됨(OrderPlaced) 이벤트를 발행한다. - 첫번째 
-
-![saga1](https://user-images.githubusercontent.com/88864433/133546289-8b2cf493-7296-4464-944a-1c112f77b500.PNG)
-
-서비스의 트랜젝션 완료
-
-[product delivery 서비스]
-
-![saga2](https://user-images.githubusercontent.com/88864433/133546388-3d5da7c0-8609-4a5b-8143-270b761a7a54.PNG)
-
-주문완료됨(OrderPlaced) 이벤트가 발행되면 상품배송 서비스에서 해당 이벤트를 확인한다.
-재고배송(stockdelivery) 정보를 추가 한다. - 두번째 서비스의 트렌젝션 완료
-
-![saga3](https://user-images.githubusercontent.com/88864433/133546519-f224c831-4a34-4360-bd79-23a5f077949e.PNG)
-
-
-
-# CQRS
-- CQRS: Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능한가?
-
-주문/배송상태가 바뀔 때마다 고객이 현재 상태를 확인할 수 있어야 한다는 요구사항에 따라 주문 서비스 내에 OrderStatus View를 모델링하였다
-
-OrderStatus.java 
-```
-@Entity
-@Table(name="OrderStatus_table")
-public class OrderStatus {
-
-        @Id
-        @GeneratedValue(strategy=GenerationType.AUTO)
-        private Long id;
-        private String username;
-        private String userId;
-        private Long orderId;
-        private String orderStatus;
-        private String productId;
-        private String productName;
-        private Long productPrice;
-        private int qty; 
-        private String couponId;
-        private String couponKind;
-        private String couponUseYn;
-.... 생략 
-```
-
-OrderStatusViewHandler 를 통해 구현
-
-Pub/Sub 기반으로 별도 ProductPage_table 테이블에 저장되도록 구현하였다.
-
-```
-@Service
-public class OrderStatusViewHandler {
-
-
-    @Autowired
-    private OrderStatusRepository orderStatusRepository;
-    
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenOrderPlaced_then_CREATE_1 (@Payload OrderPlaced orderPlaced) {
-        try {
-
-            if (!orderPlaced.validate()) return;
-
-            // view 객체 생성
-            OrderStatus orderStatus = new OrderStatus();
-            orderStatus.setUsername(orderPlaced.getUsername());
-            orderStatus.setUserId(orderPlaced.getUserId());
-            orderStatus.setOrderId(orderPlaced.getId());
-            orderStatus.setOrderStatus("OrderPlaced");
-            orderStatus.setProductId(orderPlaced.getProductId());
-            orderStatus.setProductName(orderPlaced.getProductName());
-            orderStatus.setProductPrice(orderPlaced.getProductPrice());
-            orderStatus.setQty(orderPlaced.getQty());
-           
-            orderStatusRepository.save(orderStatus);
-            
-            System.out.println("\n\n##### OrderStatus : whenOrderPlaced_then_CREATE_1" + "\n\n");
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-```
-
-주문에 대한 결제완료(PayStatus) 시 orderId를 키값으로 OrderStatus 데이터도 생성되며 (주문과 결제를 동시에 처리했을 때 배송을 시작하므로)
-
-"결제완료(주문완료), 주문접수, 배송시작, 결제취소(주문취소)"의 이벤트에 따라 주문상태가 업데이트되도록 모델링하였다.
-
-
-
-
-- CQRS 테스트 
-
-![CQRS](https://user-images.githubusercontent.com/88864433/133558737-0d82429e-add2-403b-9750-c1a723beeb86.PNG)
-
-
-
-
-# 폴리글랏 퍼시스턴스
-- pom.xml
-```
-		<dependency>
-        	<groupId>mysql</groupId>
-        	<artifactId>mysql-connector-java</artifactId>
-        	<scope>provided</scope>
-    	</dependency>
-
-		<dependency>
-		    <groupId>org.javassist</groupId>
-    		<artifactId>javassist</artifactId>
-    		<version>3.25.0-GA</version>
-		</dependency>
-```
-
-application.yml
-```
-
-spring:
-  profiles: docker
-
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://cloud12st.ck7n6wloicx4.ap-northeast-2.rds.amazonaws.com:3306/cloud12st
-    username: root
-    password: cloud#1234
-
-  jpa:
-    open-in-view: false
-    show-sql: true
-    hibernate:
-      format_sql: true
-      ddl-auto: create
-```
-
-- 각 마이크로 서비스들이 각자의 저장소 구조를 자율적으로 채택하고 각자의 저장소 유형 (RDB, NoSQL, File System 등)을 선택하여 구현하였는가?
-
-H2 DB의 경우 휘발성 데이터의 단점이 있는데, productdelivery 서비스의 경우 타 서비스들의 비해 중요하다고 생각하였다.
-productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악하여 처리해야 되기 때문에 백업,복원기능과 안정성이 장점이 있는 mysql을 선택하여 구현하였다.
+오더(order) 서비스의 포트를 추가 (오더 : 8082, 전화오더 : 8085) 하여 2개의 노드로 배송서비스를 실행한다. 
 
 
 # API 게이트웨이
@@ -693,43 +544,20 @@ productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악�
 
 - application.yml
 ```
-spring:
-  profiles: docker
-  cloud:
-    gateway:
-      routes:
-        - id: productdelivery
-          uri: http://productdelivery:8080
-          predicates:
-            - Path=/stockDeliveries/** 
-        - id: order
-          uri: http://order:8080
-          predicates:
-            - Path=/orders/**
-        - id: orderstatus
-          uri: http://orderstatus:8080
-          predicates:
-            - Path=/orderStatus/**
-        - id: marketing
-          uri: http://marketing:8080
-          predicates:
-            - Path=/promotes/** 
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "*"
-            allowedMethods:
-              - "*"
-            allowedHeaders:
-              - "*"
-            allowCredentials: true
+![api게이트웨이](https://user-images.githubusercontent.com/88864433/135473378-c8f49a7f-3ac9-4ea1-b1db-aa302f8b1789.PNG)
 
-server:
-  port: 8080
 ```
 
 Gateway의 application.yml이며, 마이크로서비스들의 진입점을 세팅하여 URI Path에 따라서 각 마이크로서비스로 라우팅되도록 설정되었다.
+Gateway 포트인 8085 (callorder)포트를 통해서 주문접수를 생성시켜 8081(배송팀) 에서 정상 동작함을 확인하였다. 
+
+- callorder POST 
+
+![post_callorder](https://user-images.githubusercontent.com/88864433/135461482-8bd3b542-28ea-4d98-8d95-3208f7fd2dc9.PNG)
+
+- stockdelivery GET 
+
+![get_stockdelivery](https://user-images.githubusercontent.com/88864433/135474090-af36b19f-c33d-4a31-8ff6-5a8efa57a905.PNG)
 
 # 운영
 --
