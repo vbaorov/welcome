@@ -194,13 +194,13 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 액터, 커맨드를 부착하여 읽기 좋게 
 
-![4_액터커맨드를 부착하여 읽기 좋게](https://user-images.githubusercontent.com/88864433/134791199-bcaf22c5-9ddb-49f8-8ab5-948e25974614.PNG)
+![4_액터커맨드를 부착하여 읽기 좋게](https://user-images.githubusercontent.com/88864433/135371696-9649d76f-0bec-4f1d-bebe-22d21ef18a08.PNG)
 
 
  
 ### 어그리게잇으로 묶기
 
-![5_어그리게잇으로 묶기](https://user-images.githubusercontent.com/88864433/134791205-a4a8bee1-31f1-4627-8145-b2c62bae4441.PNG)
+![5_어그리게잇으로 묶기](https://user-images.githubusercontent.com/88864433/135371739-de743d91-5f78-479e-9dd4-f46e0e6f1804.PNG)
 
  
 ``` 
@@ -209,7 +209,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 바운디드 컨텍스트로 묶기
 
-![6_바운디드컨텍스트로묶기](https://user-images.githubusercontent.com/88864433/134791209-f8bcd14a-d35b-46fd-8039-b05832396c2f.PNG)
+![6_바운디드컨텍스트로묶기](https://user-images.githubusercontent.com/88864433/135371751-092320d3-caa2-4905-99f7-1c21ca3bbc65.PNG)
 
  
 ```
@@ -219,13 +219,12 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 ```
 ### 폴리시 부착
 
-
-![7-3](https://user-images.githubusercontent.com/88864433/133557035-7d121b68-59ee-4816-98bf-35f7fc2bb160.PNG)
+![8 폴리시부착](https://user-images.githubusercontent.com/88864433/135371808-a0055f54-9a65-4347-96f1-81ef5c28656c.PNG)
  
 
 ### 폴리시의 이동과 컨텍스트 맵핑 (점선은 Pub/Sub, 실선은 Req/Resp) 
 
-![7_폴리시의이동과컨텍스트맵핑](https://user-images.githubusercontent.com/88864433/134791216-3a79a113-cde5-4479-b57a-6978a1f738b9.PNG)
+![8-1 폴리시의 이동과 컨텍스트 맵핑](https://user-images.githubusercontent.com/88864433/135371836-d2fc4ef7-09f2-4e50-82f5-60d289f4995d.PNG)
 
  
 
