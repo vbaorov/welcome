@@ -300,6 +300,45 @@ mvn spring-bott:run
 
 ```
 
+- AWS 클라우드의 EKS 서비스 내에 서비스를 모두 배포하였다. 
+```
+root@labs--868582820:/home/project# kubectl get all
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/callorder-9d9b9cfcf-vr56v          1/1     Running   0          30m
+pod/gateway-5c8fdfdf-nl7cb             1/1     Running   0          6h16m
+pod/marketing-55d7d8658d-j5djz         1/1     Running   7          5h48m
+pod/order-77d888fd99-vmkv8             1/1     Running   0          127m
+pod/orderstatus-6d54bf687d-q5jvh       1/1     Running   7          5h48m
+pod/productdelivery-666758dcf5-fbshf   1/1     Running   7          5h48m
+pod/siege                              1/1     Running   0          5h26m
+
+NAME                      TYPE           CLUSTER-IP       EXTERNAL-IP                                                                 PORT(S)          AGE
+service/callorder         ClusterIP      10.100.150.45    <none>                                                                      8080/TCP         29m
+service/gateway           LoadBalancer   10.100.89.144    aba2e181c0a58401ca3ea7c74bf798e5-725324256.ca-central-1.elb.amazonaws.com   8080:32321/TCP   6h9m
+service/kubernetes        ClusterIP      10.100.0.1       <none>                                                                      443/TCP          8h
+service/marketing         ClusterIP      10.100.21.247    <none>                                                                      8080/TCP         5h48m
+service/order             ClusterIP      10.100.21.110    <none>                                                                      8080/TCP         127m
+service/orderstatus       ClusterIP      10.100.153.201   <none>                                                                      8080/TCP         5h48m
+service/productdelivery   ClusterIP      10.100.8.67      <none>                                                                      8080/TCP         5h48m
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/callorder         1/1     1            1           30m
+deployment.apps/gateway           1/1     1            1           6h16m
+deployment.apps/marketing         1/1     1            1           5h48m
+deployment.apps/order             1/1     1            1           127m
+deployment.apps/orderstatus       1/1     1            1           5h48m
+deployment.apps/productdelivery   1/1     1            1           5h48m
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/callorder-9d9b9cfcf          1         1         1       30m
+replicaset.apps/gateway-5c8fdfdf             1         1         1       6h16m
+replicaset.apps/marketing-55d7d8658d         1         1         1       5h48m
+replicaset.apps/order-77d888fd99             1         1         1       127m
+replicaset.apps/orderstatus-6d54bf687d       1         1         1       5h48m
+replicaset.apps/productdelivery-666758dcf5   1         1         1       5h48m
+```
+
+
 # DDD의 적용
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
 
