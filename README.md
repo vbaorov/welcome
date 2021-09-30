@@ -429,24 +429,31 @@ public interface CallOrderRepository extends PagingAndSortingRepository<CallOrde
 전화주문 결제 후 productdelivery 주문 접수하기 POST
 
 ```
-[시나리오 1]
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“Seoul” productId=“1001" payStatus=“Y” phoneNo=“01011110000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“England” productId=“2001” payStatus=“Y” phoneNo=“0102220000” productName=“gram” productPrice=9000000 qty=1 userId=“gentleman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“USA” productId=“3001" payStatus=“Y” phoneNo=“01030000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
-http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders address=“USA” productId=“3001” payStatus=“Y” phoneNo=“01030000” productName=“Mac” productPrice=3000000 qty=1 userId=“last test” username=“last test”
-[시나리오 2]
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/1 orderStatus=“Order Canceled”
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/3 orderStatus=“Order Canceled”
-http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders/5 orderStatus=“Order Canceled”
-[체크]
-http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/callorders
-http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orderStatus
-http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/stockDeliveries
-http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/promotes
+[시나리오1]
+http POST http://localhost:8085/callorders address=“England” productId=“2001” payStatus=“Y” phoneNo=“01075722744” productName=“gram” productPrice=9000000 qty=1 userId=“gentleman” username=“TRUMP”
+
+[시나리오2] 
+http GET http://localhost:8081/stockDeliveries
+http GET http://localhost:8082/orderStatus
+http GET http://localhost:8083/promotes
+http GET http://localhost:8085/callorders
 ```
 
+- callorder POST 
 
-# 비동기식 호출과 Eventual Consistency (작성완료)
+![post_callorder](https://user-images.githubusercontent.com/88864433/135461482-8bd3b542-28ea-4d98-8d95-3208f7fd2dc9.PNG)
+
+- callorder GET 
+
+![get_callorder](https://user-images.githubusercontent.com/88864433/135461817-59ce4da2-914d-41d7-9b0e-b61504ab7661.PNG)
+
+- 기존기능 중 하나인 promotes 
+
+![get_promotes](https://user-images.githubusercontent.com/88864433/135461867-8ae193b3-5a90-499c-b1c0-5bf96bbb43ff.PNG)
+
+
+
+# 비동기식 호출과 Eventual Consistency
 
 (이벤트 드리븐 아키텍처)
 
