@@ -1,4 +1,4 @@
-# 조별과제 - 12번가
+# 개인과제 - 12번가
 
 ![12번가](https://user-images.githubusercontent.com/88864433/133467597-709524b1-4613-4dab-bc57-948f433ad565.png)
 ---------------------------------
@@ -34,17 +34,25 @@
 
 가. 기능적 요구사항
 
- 1. [주문팀]고객이 상품을 선택하여 주문 및 결제 한다.
+1. [주문팀]고객이 상품을 선택하여 주문 및 결제 한다.
 
- 2. [주문팀]주문이 되면 주문 내역이 상품배송팀에게 전달된다. orderplaced
+2. [주문팀]주문이 되면 주문 내역이 상품배송팀에게 전달된다. orderplaced (Pub/sub)
 
- 3. [상품배송팀]상품팀은 재고를 확인해서 배송을 출발한다.
+3. [상품배송팀] 주문을 확인하고 쿠폰 발행을 요청한다. ( Req/Res )
 
- 4. [마케팅팀]배송이 시작되면 쿠폰을 발행한다. ( 4.Req/Resp )
+4. [마케팅팀] 쿠폰을 발행하고 상품배송팀에 알린다. ( Req/Res )
 
- 5. [주문팀]고객이 주문을 취소한다.
+5. [상품배송팀] 쿠폰이 발행이 완료되면(반드시), 배송을 출발한다.
 
- 6. [상품배송팀] 주문이 취소되면 배달이 취소된다.
+6. [주문팀]고객이 주문을 취소한다.
+
+7. [주문팀]주문 취소를 상품배송팀에 알린다.
+
+8. [상품배송팀] 주문 취소를 확인하고 쿠폰 취소를 요청한다. ( Req/Res )
+
+9. [마케팅팀] 발행된 쿠폰을 취소하고 상품배송팀에 알린다. ( Req/Res )
+
+10. [상품배송팀] 쿠폰이 발행이 취소되면(반드시), 배송을 취소한다.
 
 
 나. 비기능적 요구사항
@@ -53,15 +61,43 @@
 
 2. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
 
-3. [설계/구현]Correlation : 주문을 취소하면 배달을 취소->재고 증가 -> 주문 상태 변경
+3. [설계/구현]Correlation : 주문을 취소하면 -> 쿠폰을 취소하고 -> 배달을 취소 후 주문 상태 변경
 
-4. [설계/구현]saga : 상품배송팀 기능이 수행되지 않아도 주문은 항상 받을 수 있어야 한다.
+4. [설계/구현]saga : 서비스(상품팀, 상품배송팀, 마케팅팀)는 단일 서비스 내의 데이터를 처리하고, 각자의 이벤트를 발행하면 연관된 서비스에서 이벤트에 반응하여 각자의 데이터를 변경시킨다.
 
-5. [설계/구현/운영]circuit breaker : 주문결재건수가 많으면(3건) 주문 및 결재를 받지 않고 잠시 후에 하도록 안내한다.
+5. [설계/구현/운영]circuit breaker : 배송 요청 건수가 임계치 이상 발생할 경우 Circuit Breaker 가 발동된다. 
 
 다. 기타 
 
-1. [설계/구현/운영]polyglot : 주문팀과 상품배송팀은 mysql 데이터베이스 활용
+1. [설계/구현/운영]polyglot : 상품팀과 주문팀은 서로 다른 DB를 사용하여 polyglot을 충족시킨다.
+
+
+# 추가 시나리오
+가. 기능적 요구사항
+
+### 11. [전화주문] 고객이 전화를 통해 상품을 주문 및 결제한다. 
+
+### 12. [전화주문] 전화로 주문이 완료되면 자동으로 상품배송팀에 정보가 전달된다. callorderplaced (Pub/sub)
+
+### 13. [전화주문] 고객이 전화를 통해 주문을 취소한다. 
+
+### 14. [전화주문] 전화를 통한 주문취소를 상품배송팀에 알린다. 
+
+나. 비기능적 요구사항
+
+1. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
+### - 기존주문과 전화주문을 포함하여 고객은 주문상태를 확인 가능해야 한다. 
+
+2. [설계/구현]Correlation : 주문을 취소하면 -> 쿠폰을 취소하고 -> 배달을 취소 후 주문 상태 변경
+### - 전화 주문 취소시에도 쿠폰을 취소하고, 배달을 취소 후에 상태를 변경한다. 
+
+3. [설계/구현]saga : 서비스(상품팀, 상품배송팀, 마케팅팀)는 단일 서비스 내의 데이터를 처리하고, 각자의 이벤트를 발행하면 연관된 서비스에서 이벤트에 반응하여 각자의 데이터를 변경시킨다.
+### - 주문팀에서와 동일하게 전화주문팀에서 데이터가 변경되었을 때도 데이터가 변경되어야 한다.
+
+다. 기타
+
+1. [설계/구현/운영]polyglot : 상품팀과 주문팀은 서로 다른 DB를 사용하여 polyglot을 충족시킨다.
+### - 주문팀과 전화주문팀은 동일한 DB를 사용한다.
 
 
 
@@ -136,7 +172,7 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 이벤트 도출
 
-![1](https://user-images.githubusercontent.com/88864433/133356420-db8f0cf8-a3f6-4d24-8242-e9e739401045.PNG)
+![1_EVENTSTOMING결과](https://user-images.githubusercontent.com/88864433/134791183-9d8f81f7-49a3-4326-8636-ab0d697dc4d4.PNG)
 
 ```
 1차적으로 필요하다고 생각되는 이벤트를 도출하였다 
@@ -144,7 +180,8 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 부적격 이벤트 탈락
 
-![2](https://user-images.githubusercontent.com/88864433/133356470-ee9c68e5-50c7-45b8-8bf2-15b9ee408036.PNG)
+![2_부적격이벤트탈락](https://user-images.githubusercontent.com/88864433/134791192-8c11ea8f-df09-4122-b97d-2906bd4a6d7a.PNG)
+
 
 ```
 - 과정 중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
@@ -152,16 +189,19 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 - 주문과 결제는 동시에 이루어진다고 봐서 주문과 결제를 묶음 
 ```
 
-![3](https://user-images.githubusercontent.com/88864433/133356499-0fa6c5d6-b0ae-48a5-8e9c-06a5bac07ea1.PNG)
+![3_탈락후결과](https://user-images.githubusercontent.com/88864433/134791195-ade44b8a-470c-4c09-99b4-bc769647e464.PNG)
+
 
 ### 액터, 커맨드를 부착하여 읽기 좋게 
 
-![4](https://user-images.githubusercontent.com/88864433/133261133-569d5f5d-5411-49fe-a439-30352ed2b0f6.PNG)
+![4_액터커맨드를 부착하여 읽기 좋게](https://user-images.githubusercontent.com/88864433/134791199-bcaf22c5-9ddb-49f8-8ab5-948e25974614.PNG)
+
 
  
 ### 어그리게잇으로 묶기
 
-![5](https://user-images.githubusercontent.com/88864433/133261206-85a09dd0-b646-4e4a-b499-8009f92570a1.PNG)
+![5_어그리게잇으로 묶기](https://user-images.githubusercontent.com/88864433/134791205-a4a8bee1-31f1-4627-8145-b2c62bae4441.PNG)
+
  
 ``` 
 - 고객의 주문후 배송팀의 배송관리, 마케팅의 쿠폰관리는 command와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 묶어줌
@@ -169,7 +209,8 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 
 ### 바운디드 컨텍스트로 묶기
 
-![6](https://user-images.githubusercontent.com/88864433/133261300-7763fea1-0a66-414d-9c5e-99f6707c1524.PNG)
+![6_바운디드컨텍스트로묶기](https://user-images.githubusercontent.com/88864433/134791209-f8bcd14a-d35b-46fd-8039-b05832396c2f.PNG)
+
  
 ```
 - 도메인 서열 분리 
@@ -179,21 +220,24 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 ### 폴리시 부착
 
 
-![폴리시](https://user-images.githubusercontent.com/88864433/133261468-49081d3c-a46d-4c5c-a8d5-4f3f8345fde2.PNG)
+![7-3](https://user-images.githubusercontent.com/88864433/133557035-7d121b68-59ee-4816-98bf-35f7fc2bb160.PNG)
  
 
 ### 폴리시의 이동과 컨텍스트 맵핑 (점선은 Pub/Sub, 실선은 Req/Resp) 
 
-![8](https://user-images.githubusercontent.com/88864433/133361234-7bde60ba-2b5e-415e-a417-924e62d712a4.PNG)
+![7_폴리시의이동과컨텍스트맵핑](https://user-images.githubusercontent.com/88864433/134791216-3a79a113-cde5-4479-b57a-6978a1f738b9.PNG)
+
  
 
 ### 완성된 모형
 
-![모델](https://user-images.githubusercontent.com/88864433/133361343-d99b4182-22ac-4881-aeee-19ae121723b5.PNG)
+![MSAEZ_1](https://user-images.githubusercontent.com/88864433/134791220-0258016c-87dd-4b73-b0a7-7fcb89942cde.PNG)
+
  
 ### 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
 
-![주문완료검증](https://user-images.githubusercontent.com/88864433/133361542-bc0225f1-d540-42d8-ab1b-f9de9967e84a.PNG)
+![9_주문에대한검증](https://user-images.githubusercontent.com/88864433/134791226-dde1c98c-d913-453f-9b2d-31d075911ea2.PNG)
+
 
 ```
 - 고객이 물건을 주문하고 결제한다 (ok)
@@ -201,7 +245,8 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 - 마케팅팀에서 쿠폰을 발행한다 (ok) 
 - 쿠폰이 발행된 것을 확인하고 배송을 시작한다 (ok)
 ```
-![주문취소검증](https://user-images.githubusercontent.com/88864433/133361562-11bef187-a52e-4948-a429-995d76d4424d.PNG)
+![10_주문취소에대한검증](https://user-images.githubusercontent.com/88864433/134791230-c1b500e0-11ff-49fe-a28f-644e0d0300b8.PNG)
+
 
 ``` 
 - 고객이 주문을 취소할 수 있다 (ok)
@@ -211,21 +256,22 @@ https://www.msaez.io/#/storming/7znb05057kPWQo1TAWCkGM0O2LJ3/5843d1078a788a01aa8
 - 쿠폰발행이 취소되면 배송팀에서 배송을 취소한다 (ok)
 ```
 
-### 비기능 요구사항에 대한 검증 (5개가 맞는지 검토 필요)
+### 비기능 요구사항에 대한 검증 
 
-![비기능적 요구사항](https://user-images.githubusercontent.com/88864433/133370337-84871067-789e-48d1-89e4-486fd6d3e00e.PNG)
+![11_비기능적요구사항검증](https://user-images.githubusercontent.com/88864433/134791233-461f4fb3-c6d8-4a97-9fb5-a9722e283a03.PNG)
+
 
 ```
 1. [설계/구현]Req/Resp : 쿠폰이 발행된 건에 한하여 배송을 시작한다. 
 2. [설계/구현]CQRS : 고객이 주문상태를 확인 가능해야한다.
-3. [설계/구현]Correlation : 주문을 취소하면 배달을 취소->재고 증가 -> 주문 상태 변경
-4. [설계/구현]saga : 상품배송팀 기능이 수행되지 않아도 주문은 항상 받을 수 있어야 한다.
-5. [설계/구현/운영]circuit breaker : 주문결재건수가 많으면(3건) 주문 및 결재를 받지 않고 잠시 후에 하도록 안내한다.
+3. [설계/구현]Correlation : 주문을 취소하면 -> 쿠폰을 취소하고 -> 배달을 취소 후 주문 상태 변경
+4. [설계/구현]saga : 서비스(상품팀, 상품배송팀, 마케팅팀)는 단일 서비스 내의 데이터를 처리하고, 각자의 이벤트를 발행하면 연관된 서비스에서 이벤트에 반응하여 각자의 데이터를 변경시킨다.
+5. [설계/구현/운영]circuit breaker : 배송 요청 건수가 임계치 이상 발생할 경우 Circuit Breaker 가 발동된다. 
 ``` 
 
-### 헥사고날 아키텍처 다이어그램 도출 (그림 수정필요없는지 확인 필요)
+### 헥사고날 아키텍처 다이어그램 도출 (업데이트 필요) 
 
-![분산이벤트스트림](https://user-images.githubusercontent.com/88864433/133448231-162975ce-3bf4-412a-8de6-e419df515834.PNG)
+![분산스트림2](https://user-images.githubusercontent.com/88864433/133557657-451e67e9-400a-477c-af09-2bfd56f9a659.PNG)
  
 
 ```
@@ -249,7 +295,7 @@ cd marketing
 mvn spring-boot:run 
 ```
 
-# DDD의 적용 (작성완료) 
+# DDD의 적용
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 데이터 접근 어댑터를 개발하였는가? 
 
 각 서비스 내에 도출된 핵심 Aggregate Root 객체를 Entity로 선언하였다. (주문(order), 배송(productdelivery), 마케팅(marketing)) 
@@ -323,6 +369,8 @@ public class Order {
 
 Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 하였고 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
 
+OrderRepository.java
+
 ```
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -331,7 +379,46 @@ public interface OrderRepository extends PagingAndSortingRepository<Order, Long>
 }
 ```
 
-promote.java 
+배송팀의 StockDelivery.java
+
+```
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+```
+```
+@Entity
+@Table(name="StockDelivery_table")
+public class StockDelivery {
+
+     //Distance 삭제 및 Id auto로 변경
+    
+    private Long orderId;
+    private String orderStatus;
+    private String userName;
+    private String address;
+    private String productId;
+    private Integer qty;
+    private String storeName;
+    private Date orderDate;
+    private Date confirmDate;
+    private String productName;
+    private String phoneNo;
+    private Long productPrice;
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private String customerId;
+    private String deliveryStatus;
+    private Date deliveryDate;
+    private String userId;
+    
+    private static final String DELIVERY_STARTED = "delivery Started";
+    private static final String DELIVERY_CANCELED = "delivery Canceled";
+... 생략 
+```
+
+마케팅의 promote.java 
 
 ``` 
 @Entity
@@ -375,6 +462,8 @@ public class Promote {
 
 ```
 
+PromoteRepository.java
+
 ```
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -392,29 +481,24 @@ public interface PromoteRepository extends PagingAndSortingRepository<Promote, L
 주문 결제 후 productdelivery 주문 접수하기 POST
 
 ```
-#### (명령어수정필요) 아래는 예시
-# wellbing 서비스의 체크인 처리
-http http://localhost:8081/eats number=3000
-
-# wellbing 서비스의 체크아웃 후 point 서비스의 적립 처리
-http PUT http://localhost:8081/eats/1 number=3000
-
-# 적립 상태 확인
-http http://localhost:8082/earns/1
-
-#### POST 캡쳐화면 
-
-```
-#### 작성필요
-order 주문 취소하기 PATCH
-```
-http PATCH localhost:8088/orders/5 orderStatus="orderCanceled"
+[시나리오 1]
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“Seoul” productId=“1001" payStatus=“Y” phoneNo=“01011110000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“England” productId=“2001” payStatus=“Y” phoneNo=“0102220000” productName=“gram” productPrice=9000000 qty=1 userId=“gentleman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“USA” productId=“3001" payStatus=“Y” phoneNo=“01030000" productName=“Mac” productPrice=3000000 qty=1 userId=“goodman” username=“John”
+http POST http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders address=“USA” productId=“3001” payStatus=“Y” phoneNo=“01030000” productName=“Mac” productPrice=3000000 qty=1 userId=“last test” username=“last test”
+[시나리오 2]
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/1 orderStatus=“Order Canceled”
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/3 orderStatus=“Order Canceled”
+http PATCH http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders/5 orderStatus=“Order Canceled”
+[체크]
+http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orders
+http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/orderStatus
+http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/stockDeliveries
+http GET http://aedb7e1cae2d84953b471cb6b57ed58f-1249713815.ap-southeast-1.elb.amazonaws.com:8080/promotes
 ```
 
-#### 주문취소하기 캡쳐화면
 
-
-# 동기식 호출과 Fallback 처리 (작성완료)
+# 동기식 호출과 Fallback 처리
 
 (Request-Response 방식의 서비스 중심 아키텍처 구현)
 
@@ -522,9 +606,6 @@ public class PromoteServiceFallback implements PromoteService {
 (이벤트 드리븐 아키텍처)
 
 - 카프카를 이용하여 PubSub 으로 하나 이상의 서비스가 연동되었는가?
-- Correlation-key: 각 이벤트 건 (메시지)가 어떠한 폴리시를 처리할때 어떤 건에 연결된 처리건인지를 구별하기 위한 Correlation-key 연결을 제대로 구현 하였는가?
-
-#### 답변 (검토필요) 
 
 주문/주문취소 후에 이를 배송팀에 알려주는 트랜잭션은 Pub/Sub 관계로 구현하였다.
 아래는 주문/주문취소 이벤트를 통해 kafka를 통해 배송팀 서비스에 연계받는 코드 내용이다. 
@@ -557,7 +638,7 @@ public class PromoteServiceFallback implements PromoteService {
 - 배송팀에서는 주문/주문취소 접수 이벤트에 대해 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler를 구현한다. 
 
 ```
-@Service
+Service
 public class PolicyHandler{
     @Autowired StockDeliveryRepository stockDeliveryRepository;
 
@@ -565,24 +646,27 @@ public class PolicyHandler{
     public void wheneverOrderPlaced_AcceptOrder(@Payload OrderPlaced orderPlaced){
 
         if(!orderPlaced.validate()) return;
-...중략 
+
+        // delivery 객체 생성 //
+         StockDelivery delivery = new StockDelivery();
+
+         delivery.setOrderId(orderPlaced.getId());
+         delivery.setUserId(orderPlaced.getUserId());
+         delivery.setOrderDate(orderPlaced.getOrderDate());
+         delivery.setPhoneNo(orderPlaced.getPhoneNo());
+         delivery.setProductId(orderPlaced.getProductId());
+         delivery.setQty(orderPlaced.getQty()); 
+         delivery.setDeliveryStatus("delivery Started");
+
+         System.out.println("==================================");
+         System.out.println(orderPlaced.getId());
+         System.out.println(orderPlaced.toJson());
+         System.out.println("==================================");
+         System.out.println(delivery.getOrderId());
 
          stockDeliveryRepository.save(delivery);
 
     }
-    private Integer parseInt(String qty) {
-        return null;
-    }
-    /*
-    @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverOrderCanceled_CancleOrder(@Payload OrderCanceled orderCanceled){
-        if(!orderCanceled.validate()) return;
-        Long orderId =Long.valueOf(orderCanceled.getId());
-        stockDeliveryRepository.deleteById(orderId); 
-        
-        stockDeliveryRepository.s
-    }
-    */
     
     @StreamListener(KafkaProcessor.INPUT)
     public void wheneverOrderCanceled_CancleOrder(@Payload OrderCanceled orderCanceled) {
@@ -602,26 +686,33 @@ public class PolicyHandler{
 ```
 
 
+# SAGA 패턴
+- 취소에 따른 보상 트랜잭션을 설계하였는가?(Saga Pattern)
 
-
-
-
-
-
-
-# SAGA 패턴 (작성필요) 
-- 취소에 따른 보상 트랜잭션을 설계하였는가(Saga Pattern)
-
-#### 답변 : 
 상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 
+다만 데이터의 원자성을 보장해주지 않기 때문에 추후 order service 에서 재고 정보를 확인한 이후에 주문수락을 진행하거나, 상품배송 서비스에서 데이터 변경전 재고 여부를 확인하여 롤백 이벤트를 보내는 로직이 필요할 것으로 판단된다. 
 
 
-### SAGA 패턴에 맞춘 트랜잭션 실행 (캡쳐화면) 
+order 서비스가  고객으로 주문 및 결제(order and pay) 요청을 받고
+[order 서비스]
+Order aggegate의 값들을 추가한 이후 주문완료됨(OrderPlaced) 이벤트를 발행한다. - 첫번째 
+
+![saga1](https://user-images.githubusercontent.com/88864433/133546289-8b2cf493-7296-4464-944a-1c112f77b500.PNG)
+
+서비스의 트랜젝션 완료
+
+[product delivery 서비스]
+
+![saga2](https://user-images.githubusercontent.com/88864433/133546388-3d5da7c0-8609-4a5b-8143-270b761a7a54.PNG)
+
+주문완료됨(OrderPlaced) 이벤트가 발행되면 상품배송 서비스에서 해당 이벤트를 확인한다.
+재고배송(stockdelivery) 정보를 추가 한다. - 두번째 서비스의 트렌젝션 완료
+
+![saga3](https://user-images.githubusercontent.com/88864433/133546519-f224c831-4a34-4360-bd79-23a5f077949e.PNG)
 
 
 
-
-# CQRS (작성완료. 검토필요) 
+# CQRS
 - CQRS: Materialized View 를 구현하여, 타 마이크로서비스의 데이터 원본에 접근없이(Composite 서비스나 조인SQL 등 없이) 도 내 서비스의 화면 구성과 잦은 조회가 가능한가?
 
 주문/배송상태가 바뀔 때마다 고객이 현재 상태를 확인할 수 있어야 한다는 요구사항에 따라 주문 서비스 내에 OrderStatus View를 모델링하였다
@@ -696,15 +787,13 @@ public class OrderStatusViewHandler {
 
 
 - CQRS 테스트 
-``` 
-캡쳐화면 등록 
-````
 
-- Message Consumer 마이크로서비스가 장애상황에서 수신받지 못했던 기존 이벤트들을 다시 수신받아 처리하는가?
-#### 답변 
-ordermanagement 서비스만 구동되고 delivery 서비스는 멈춰있는 상태이다. 주문관리에 이벤트가 발생하면 카프카 큐에 정상적으로 들어감을 확인할 수 있다.
+![CQRS](https://user-images.githubusercontent.com/88864433/133558737-0d82429e-add2-403b-9750-c1a723beeb86.PNG)
 
-# 폴리글랏 퍼시스턴스 (작성완료. 검토필요) 
+
+
+
+# 폴리글랏 퍼시스턴스
 - pom.xml
 ```
 		<dependency>
@@ -742,12 +831,11 @@ spring:
 
 - 각 마이크로 서비스들이 각자의 저장소 구조를 자율적으로 채택하고 각자의 저장소 유형 (RDB, NoSQL, File System 등)을 선택하여 구현하였는가?
 
-#### 답변 
 H2 DB의 경우 휘발성 데이터의 단점이 있는데, productdelivery 서비스의 경우 타 서비스들의 비해 중요하다고 생각하였다.
 productdelivery는 주문과 쿠폰발행/취소를 중간에서 모두 파악하여 처리해야 되기 때문에 백업,복원기능과 안정성이 장점이 있는 mysql을 선택하여 구현하였다.
 
 
-# API 게이트웨이 (작성중)
+# API 게이트웨이
 - API GW를 통하여 마이크로 서비스들의 진입점을 통일할 수 있는가?
 
 - application.yml
@@ -787,12 +875,12 @@ spring:
 server:
   port: 8080
 ```
-#### 답변
-아래는 MSAEZ를 통해 자동 생성된 gateway 서비스의 application.yml이며, 마이크로서비스들의 진입점을 통일하여 URL Path에 따라서 마이크로서비스별 서로 다른 포트로 라우팅시키도록 설정되었다.
+
+Gateway의 application.yml이며, 마이크로서비스들의 진입점을 세팅하여 URI Path에 따라서 각 마이크로서비스로 라우팅되도록 설정되었다.
 
 # 운영
 --
-# Deploy/Pipeline (작성완료)
+# Deploy/Pipeline
 
 - (CI/CD 설정) BuildSpec.yml 사용 각 MSA 구현물은 git의 source repository 에 구성되었고, AWS의 CodeBuild를 활용하여 무정지 CI/CD를 설정하였다.
 
@@ -858,69 +946,93 @@ cache:
 ```
 
 # 동기식 호출 / Circuit Breaker / 장애격리
-서킷 브레이킹 프레임워크의 선택: Spring FeignClient + Hystrix 옵션을 사용하여 구현함
 오더 요청이 과도할 경우 서킷 브레이크를 통해 장애 격리를 하려고 한다.
 
-Hystrix 를 설정: 요청처리 쓰레드에서 처리시간이 610 ms가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
+- 부하테스터 siege툴을 통한 Circuit Breaker 동작 확인 : 
+- 동시사용자 50명
+- 30초간 실시
+- marketing 서비스의 req/res 호출 후 저장전 sleep 을 진행한다.
 
-# Autoscale(HPA) 
--- 
+```
+siege -c50 -t30S -r10 -v --content-type "application/json" 'http://localhost:8081/stockDeliveries POST {"orderId": 1, "orderStatus": "test", "userName": "test", "qty": 10, "deliveryStatus": "delivery Started"}'
+```
+
+
+![ciruit1](https://user-images.githubusercontent.com/88864433/133549822-19fa0ac7-6876-4b76-b2fb-9d64e0feace3.PNG)
+
+![circuit2](https://user-images.githubusercontent.com/88864433/133549882-3b653f1e-6c84-4abb-b073-b5cca21ddda2.PNG)
+
+![circuit3](https://user-images.githubusercontent.com/88864433/133549892-99e332ac-18fe-4b4e-9737-b4341b66985f.PNG)
+
+![circuit4](https://user-images.githubusercontent.com/88864433/133550076-1789913a-d545-4c18-9fc3-3afe0e03c8e2.PNG)
+
+![circuit5](https://user-images.githubusercontent.com/88864433/133550122-22b8de48-faeb-4079-8bcf-9d6b48f5a457.PNG)
+
+
+
+# Autoscale(HPA)
+앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 한다.
+
+
+![hpa1](https://user-images.githubusercontent.com/88864433/133547537-2a3d5954-305b-443e-9f06-ecd0913fdc1a.PNG)
+
+평소에 order pod이 정상적으로 존재하던 중에
+
+![hpa2](https://user-images.githubusercontent.com/88864433/133547635-04bbab9e-8373-4e40-94b2-6b23cadab2bb.PNG)
+
+Autoscale 설정 명령어 실행
+
+![hpa3](https://user-images.githubusercontent.com/88864433/133547683-607efd3d-b1a4-47fc-b3a2-3c19700de609.PNG)
+
+Autoscale 설정됨을 확인
+
+![hpa4](https://user-images.githubusercontent.com/88864433/133547727-9e4fb0bd-cbc9-45d5-ab08-606088272f7c.PNG)
+
+siege 명령어를 수행 
+
+![hpa5](https://user-images.githubusercontent.com/88864433/133547764-705a846d-c211-44b5-ae1f-bbb683fce886.PNG)
+
+CPU 사용량이 5% 이상인 경우 POD는 최대 10개까지 늘어나는 것을 확인
+
+![hpa6](https://user-images.githubusercontent.com/88864433/133547800-ea2c92cc-7733-4605-b58f-bc408a5c635b.PNG)
+
+siege 가용성은 100%을 유지하고 있다.
+
 
 # Zero-downtime deploy (Readiness Probe) 
 (무정지 배포) 
+
 서비스의 무정지 배포를 위하여 오더(Order) 서비스의 배포 yaml 파일에 readinessProbe 옵션을 추가하였다.
+
+![HPA8](https://user-images.githubusercontent.com/88864433/133559651-9169b961-c0f8-47db-b8df-8b3c274bbd91.PNG)
 
 ![readness1](https://user-images.githubusercontent.com/88864433/133539552-06cc7425-1cb5-4319-b92b-c7c20d807c69.PNG)
 
+파일의 버전이 v1을 적용하고 siege를 실행한 상태에서 v2로 배포를 진행하였다. 
+
 ![readness2](https://user-images.githubusercontent.com/88864433/133539593-37ea6cf1-ce76-4d5e-bf21-b6f3ec85079c.PNG)
 
+서비스의 끊김없이 무정지 배포가 실행됨을 확인하였다. 
 
-# Self-healing (Liveness Probe) 작성완료
 
-deployment.yml 
+# Self-healing (Liveness Probe)
 
-```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: productdelivery
-  labels:
-    app: productdelivery
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: productdelivery
-  template:
-    metadata:
-      labels:
-        app: productdelivery
-    spec:
-      containers:
-        - name: productdelivery
-          image: 879772956301.dkr.ecr.ap-southeast-1.amazonaws.com/productdelivery:latest
-          ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
-            initialDelaySeconds: 10
-            timeoutSeconds: 2
-            periodSeconds: 5
-            failureThreshold: 10
-          livenessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
-            initialDelaySeconds: 120
-            timeoutSeconds: 2
-            periodSeconds: 5
-            failureThreshold: 5
-```
-주문배송(Productdelivery) 서비스의 배포 yaml 파일에 Pod 내 /actuator/health 파일을 5초마다 체크하도록 livenessProbe 옵션을 추가하였다
+- port 및 정보를 잘못된 값으로 변경하여 yml 적용
 
-![liveness](https://user-images.githubusercontent.com/88864433/133543120-baca4cf7-fe8e-4b13-afb3-9f101d5b6060.PNG)
+![liveness1](https://user-images.githubusercontent.com/88864433/133550800-5c481182-5e46-4572-b5c8-738fe5356653.PNG)
+
+- 해당 yml을 배포
+
+![liveness2](https://user-images.githubusercontent.com/88864433/133550866-21e9ca23-9d2c-41a0-bc60-0f6a7596279f.PNG)
+
+- 잘못된 경로와 포트여서 kubelet이 자동으로 컨테이너를 재시작하였다. 
+
+![LIVENESS4](https://user-images.githubusercontent.com/88864433/133563189-377ef1fe-7e86-4ea6-b387-87739edcdf61.PNG)
+
+- POD가 재시작되었다. 
+
+![liveness3](https://user-images.githubusercontent.com/88864433/133550970-0f13cf46-7b96-4034-aeaa-c24750597973.PNG)
+
 
 
 # 운영유연성
@@ -1020,3 +1132,4 @@ logging:
 - 최종 테스트 화면
 
 ![pvc_최종](https://user-images.githubusercontent.com/88864433/133479414-111980fb-598b-4e5a-8f13-24255d11f53a.PNG)
+
