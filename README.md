@@ -538,6 +538,64 @@ public class PolicyHandler{
 
 오더(order) 서비스의 포트를 추가 (오더 : 8082, 전화오더 : 8085) 하여 2개의 노드로 배송서비스를 실행한다. 
 
+# SAGA 패턴
+- 취소에 따른 보상 트랜잭션을 설계하였는가? (Saga Pattern)
+
+상품배송팀의 기능을 수행할 수 없더라도 주문은 항상 받을 수 있게끔 설계하였다. 다만 데이터의 원자성을 보장해주지 않기 때문에 추후 order service 에서 재고 정보를 확인한 이후에 주문수락을 진행하거나, 상품배송 서비스에서 데이터 변경전 재고 여부를 확인하여 롤백 이벤트를 보내는 로직이 필요할 것으로 판단된다.
+
+callorder 서비스가 고객으로 주문 및 결제(order and pay) 요청을 받고 callOrder aggregate의 값들을 추가한 이후 주문완료됨(OrderPlaced) 이벤트를 발행한다.
+
+CallOrder.java
+```
+    @PostPersist
+    public void onPostPersist(){
+    	
+         Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    	
+        CallOrderPlaced callorderPlaced = new CallOrderPlaced();
+        BeanUtils.copyProperties(this, callorderPlaced);
+        callorderPlaced.publishAfterCommit();
+        System.out.println("\n\n##### CallOrderService : onPostPersist()" + "\n\n");
+        System.out.println("\n\n##### callorderplace : "+callorderPlaced.toJson() + "\n\n");
+        System.out.println("\n\n##### productid : "+this.productId + "\n\n");
+        logger.debug("CallOrderService");
+    }
+```
+
+OrderStatusViewHandler.java
+```
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderPlaced_then_CREATE_1 (@Payload OrderPlaced orderPlaced) {
+```
+
+주문완료됨(OrderPlaced) 이벤트가 발행되면 상품배송 서비스에서 해당 이벤트를 확인한다. 재고배송(stockdelivery) 정보를 추가 한다. 
+
+```
+        // delivery 객체 생성 //
+         StockDelivery delivery = new StockDelivery();
+
+         delivery.setOrderId(orderPlaced.getId());
+         delivery.setUserId(orderPlaced.getUserId());
+         delivery.setOrderDate(orderPlaced.getOrderDate());
+         delivery.setPhoneNo(orderPlaced.getPhoneNo());
+         delivery.setProductId(orderPlaced.getProductId());
+         delivery.setQty(orderPlaced.getQty()); 
+         delivery.setDeliveryStatus("delivery Started");
+
+         System.out.println("==================================");
+         System.out.println(orderPlaced.getId());
+         System.out.println(orderPlaced.toJson());
+         System.out.println("==================================");
+         System.out.println(delivery.getOrderId());
+
+         stockDeliveryRepository.save(delivery);
+```
+
+# CQRS (팀과제에서 구현되어 있어 제외) 
+
+# 폴리글랏 퍼시스턴스 (팀과제에서 구현되어 있어 제외)
+
 
 # API 게이트웨이
 - API GW를 통하여 마이크로 서비스들의 진입점을 통일할 수 있는가?
